@@ -7,7 +7,20 @@ export default function ServiceCard({ service, onConfigClick }) {
     <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:transform hover:scale-105 border border-gray-700">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-3xl">{service.icon}</div>
+          {/* <div className="text-3xl">{service.icon}</div> */}
+          <div className='w-16 h-16'>
+          <Link 
+            href={service.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+          <img
+              src={service.icon}
+              alt={`${service.name} icon`}
+              className="w-full h-full object-contain"
+            />
+          </Link>
+          </div>
           <button
             onClick={() => onConfigClick()}
             className="p-2 text-gray-400 hover:text-green-400 transition-colors"
@@ -19,15 +32,15 @@ export default function ServiceCard({ service, onConfigClick }) {
           </button>
         </div>
         <h3 className="text-xl font-bold text-white mb-2 font-ubuntu-mono">{service.name}</h3>
-        <p className="text-gray-300 mb-4 font-nanum-gothic">{service.description}</p>
-        <Link 
+        <p className="text-gray-300 mb-4 font-ubuntu-mono">{service.description}</p>
+        {/* <Link 
           href={service.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors duration-300 font-nanum-gothic"
+          className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors duration-300 font-ubuntu-mono"
         >
-          서비스 열기
-        </Link>
+          Open
+        </Link> */}
       </div>
     </div>
   );
