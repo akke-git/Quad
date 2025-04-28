@@ -13,136 +13,303 @@ const services = [
     name: 'NginxPM',
     description: 'Nginx Proxy Manager',
     url: 'http://npm.akke.shop',
-    icon: '🌐',
-    dockerConfig: `version: '3'
+    icon: 'images/nginx.png',
+    dockerConfig: `version: "3"
 services:
-  nginx-proxy-manager:
+  npm:
     image: 'jc21/nginx-proxy-manager:latest'
-    restart: unless-stopped
+    container_name: npm
+    restart: always
     ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
+      - '80:80'       # HTTP
+      - '81:81'       # NPM 관리자 페이지
+      - '443:443'     # HTTPS
     volumes:
       - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt`
+      - ./letsencrypt:/etc/letsencrypt`,
   },
   {
     id: 2,
     name: 'Trilium',
-    description: '노트 관리 시스템',
+    description: 'Note-taking application',
     url: 'http://note.akke.shop',
-    icon: '📝',
-    dockerConfig: `version: '3'
+    icon: 'images/note.png',
+    dockerConfig: `version: "3.8"
+
 services:
-  trilium:
-    image: 'zadam/trilium:latest'
-    restart: unless-stopped
+  triliumnext:
+    image: triliumnext/notes:latest
+    container_name: triliumnext
+    restart: always
     ports:
-      - '8080:8080'
+      - "8088:8080"
     volumes:
-      - ./trilium-data:/home/node/trilium-data`
+      - ./data:/root/trilium-data
+    networks:
+      - akke
+
+networks:
+  akke:
+    external: true`
   },
   {
     id: 3,
     name: 'Portainer',
-    description: 'Docker 관리 도구',
+    description: 'Docker Management tool',
     url: 'http://port.akke.shop',
-    icon: '🐳',
-    dockerConfig: `version: '3'
-services:
+    icon: 'images/port.png',
+    dockerConfig:`services:
   portainer:
-    image: 'portainer/portainer-ce:latest'
-    restart: unless-stopped
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
     ports:
-      - '9000:9000'
+      - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./portainer_data:/data`
+      - /docker/portainer/portainer_data:/data
+    networks:
+      - akke
+
+volumes:
+  portainer_data:
+
+networks:
+  akke:
+    external: true`
   },
   {
     id: 4,
     name: 'Komga',
-    description: '디지털 도서관 관리',
+    description: 'toon viewer',
     url: 'http://toon.akke.shop',
-    icon: '📚',
-    dockerConfig: `version: '3'
+    icon: 'images/toon.png',
+    dockerConfig: `version: "3.8"
+
 services:
   komga:
-    image: 'gotson/komga:latest'
-    restart: unless-stopped
-    ports:
-      - '8080:8080'
+    image: gotson/komga:latest
+    container_name: komga
     volumes:
       - ./config:/config
-      - ./books:/books`
+      - /ubuntu:/data
+      - ./etc/timezone:/etc/timezone 
+    ports:
+      - 25600:25600
+    user: "0:0"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xmx2g
+      - TZ=Asia/Seoul 
+    restart: unless-stopped
+    networks:
+      - akke
+
+networks:
+  akke:
+    external: true`
   },
   {
     id: 5,
     name: 'Emby',
-    description: '미디어 서버',
+    description: 'Media Music server',
     url: 'http://mov.akke.shop',
-    icon: '🎬',
-    dockerConfig: `version: '3'
+    icon: 'images/emby.png',
+    dockerConfig: `version: "3.8"
+
 services:
   emby:
-    image: 'emby/embyserver:latest'
-    restart: unless-stopped
+    image: emby/embyserver:latest
+    container_name: emby
+    environment:
+      - UID=1000   # The UID to run emby as (default: 2)
+      - GID=100   # The GID to run emby as (default 2)
+      - GIDLIST=100   # A comma-separated list of additional GIDs to run emby as (default: 2)    
+    restart: always
     ports:
-      - '8096:8096'
+      - "8096:8096"   # basic port
+      - "8920:8920"   # https port
     volumes:
       - ./config:/config
-      - ./media:/media`
+      - /ubuntu:/mnt/media
+    networks:
+      - akke
+
+networks:
+  akke:
+    external: true`
   },
   {
     id: 6,
     name: 'NocoDB',
-    description: '데이터베이스 관리',
+    description: 'Relational Database',
     url: 'http://db.akke.shop',
-    icon: '📊',
-    dockerConfig: `version: '3'
+    icon: 'images/noco.png',
+    dockerConfig: `version: "3.8"
+
 services:
   nocodb:
-    image: 'nocodb/nocodb:latest'
-    restart: unless-stopped
+    image: nocodb/nocodb:latest
+    container_name: nocodb
+    restart: always
     ports:
-      - '8080:8080'
+      - "8082:8080"  # 호스트의 8082 포트로 접근 (컨테이너는 기본 8080 사용)
     volumes:
-      - ./data:/usr/app/data`
+      - ./nocodb_data:/usr/app/data
+    networks:
+      - akke
+
+networks:
+  akke:
+    external: true`
   },
   {
     id: 7,
     name: 'PhotoPrism',
-    description: '사진 관리 및 갤러리',
+    description: 'Photo Management & Gallery',
     url: 'http://photo.akke.shop',
-    icon: '📷',
-    dockerConfig: `version: '3'
+    icon: 'images/photo.png',
+    dockerConfig: `# Example Docker Compose config file for PhotoPrism (Linux / AMD64)
+#
+# Note:
+# - Running PhotoPrism on a server with less than 4 GB of swap space or setting a memory/swap limit can cause unexpected
+#   restarts ("crashes"), for example, when the indexer temporarily needs more memory to process large files.
+# - If you install PhotoPrism on a public server outside your home network, please always run it behind a secure
+#   HTTPS reverse proxy such as Traefik or Caddy. Your files and passwords will otherwise be transmitted
+#   in clear text and can be intercepted by anyone, including your provider, hackers, and governments:
+#   https://docs.photoprism.app/getting-started/proxies/traefik/
+#
+# Setup Guides:
+# - https://docs.photoprism.app/getting-started/docker-compose/
+# - https://docs.photoprism.app/getting-started/raspberry-pi/
+# - https://www.photoprism.app/kb/activation
+#
+# Troubleshooting Checklists:
+# - https://docs.photoprism.app/getting-started/troubleshooting/
+# - https://docs.photoprism.app/getting-started/troubleshooting/docker/
+# - https://docs.photoprism.app/getting-started/troubleshooting/mariadb/
+#
+# CLI Commands:
+# - https://docs.photoprism.app/getting-started/docker-compose/#command-line-interface
+#
+# All commands may have to be prefixed with "sudo" when not running as root.
+# This will point the home directory shortcut ~ to /root in volume mounts.
 services:
   photoprism:
-    image: 'photoprism/photoprism:latest'
-    restart: unless-stopped
+    ## Use photoprism/photoprism:preview for testing preview builds:
+    image: photoprism/photoprism:latest
+    ## Don't enable automatic restarts until PhotoPrism has been properly configured and tested!
+    ## If the service gets stuck in a restart loop, this points to a memory, filesystem, network, or database issue:
+    ## https://docs.photoprism.app/getting-started/troubleshooting/#fatal-server-errors
+    container_name: photoprism
+    # restart: unless-stopped
+    stop_grace_period: 10s
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    ## Server port mapping in the format "Host:Container". To use a different port, change the host port on
+    ## the left-hand side and keep the container port, e.g. "80:2342" (for HTTP) or "443:2342 (for HTTPS):
     ports:
-      - '2342:2342'
+      - "2342:2342"
+    ## Before you start the service, please check the following config options (and change them as needed):
+    ## https://docs.photoprism.app/getting-started/config-options/
+    environment:
+      PHOTOPRISM_ADMIN_USER: "admin"                 # admin login username
+      PHOTOPRISM_ADMIN_PASSWORD: "admin"          # initial admin password (8-72 characters)
+      PHOTOPRISM_AUTH_MODE: "password"               # authentication mode (public, password)
+      PHOTOPRISM_SITE_URL: "http://localhost:2342/"  # server URL in the format "http(s)://domain.name(:port)/(path)"
+      PHOTOPRISM_DISABLE_TLS: "false"                # disables HTTPS/TLS even if the site URL starts with https:// and a certificate is avai>
+      PHOTOPRISM_DEFAULT_TLS: "true"                 # defaults to a self-signed HTTPS/TLS certificate if no other certificate is available
+      PHOTOPRISM_ORIGINALS_LIMIT: 5000               # file size limit for originals in MB (increase for high-res video)
+      PHOTOPRISM_HTTP_COMPRESSION: "gzip"            # improves transfer speed and bandwidth utilization (none or gzip)
+      PHOTOPRISM_LOG_LEVEL: "info"                   # log level: trace, debug, info, warning, or error
+      PHOTOPRISM_READONLY: "false"                   # do not modify originals directory (reduced functionality)
+      PHOTOPRISM_EXPERIMENTAL: "false"               # enables experimental features
+      PHOTOPRISM_DISABLE_CHOWN: "false"              # disables updating storage permissions via chmod and chown on startup
+      PHOTOPRISM_DISABLE_WEBDAV: "false"             # disables built-in WebDAV server
+      PHOTOPRISM_DISABLE_SETTINGS: "false"           # disables settings UI and API
+      PHOTOPRISM_DISABLE_TENSORFLOW: "false"         # disables all features depending on TensorFlow
+      PHOTOPRISM_DISABLE_FACES: "false"              # disables face detection and recognition (requires TensorFlow)
+      PHOTOPRISM_DISABLE_CLASSIFICATION: "false"     # disables image classification (requires TensorFlow)
+      PHOTOPRISM_DISABLE_VECTORS: "false"            # disables vector graphics support
+      PHOTOPRISM_DISABLE_RAW: "false"                # disables indexing and conversion of RAW images
+      PHOTOPRISM_RAW_PRESETS: "false"                # enables applying user presets when converting RAW images (reduces performance)
+      PHOTOPRISM_SIDECAR_YAML: "true"                # creates YAML sidecar files to back up picture metadata
+      PHOTOPRISM_BACKUP_ALBUMS: "true"               # creates YAML files to back up album metadata
+      PHOTOPRISM_BACKUP_DATABASE: "true"             # creates regular backups based on the configured schedule
+      PHOTOPRISM_BACKUP_SCHEDULE: "daily"            # backup SCHEDULE in cron format (e.g. "0 12 * * *" for daily at noon) or at a random ti>
+      PHOTOPRISM_INDEX_SCHEDULE: ""                  # indexing SCHEDULE in cron format (e.g. "@every 3h" for every 3 hours; "" to disable)
+      PHOTOPRISM_AUTO_INDEX: 300                     # delay before automatically indexing files in SECONDS when uploading via WebDAV (-1 to >
+      PHOTOPRISM_AUTO_IMPORT: -1                     # delay before automatically importing files in SECONDS when uploading via WebDAV (-1 to>
+      PHOTOPRISM_DETECT_NSFW: "false"                # automatically flags photos as private that MAY be offensive (requires TensorFlow)
+      PHOTOPRISM_UPLOAD_NSFW: "true"                 # allows uploads that MAY be offensive (no effect without TensorFlow)
+      # PHOTOPRISM_DATABASE_DRIVER: "sqlite"         # SQLite is an embedded database that does not require a separate database server
+      PHOTOPRISM_SITE_CAPTION: "Svelte Powered Photos App"
+      PHOTOPRISM_SITE_DESCRIPTION: ""                # meta site description
+      PHOTOPRISM_SITE_AUTHOR: ""                     # meta site author
+      ## Video Transcoding (https://docs.photoprism.app/getting-started/advanced/transcoding/):
+      # PHOTOPRISM_FFMPEG_ENCODER: "software"        # H.264/AVC encoder (software, intel, nvidia, apple, raspberry, or vaapi)
+      # PHOTOPRISM_FFMPEG_SIZE: "1920"               # video size limit in pixels (720-7680) (default: 3840)
+      # PHOTOPRISM_FFMPEG_BITRATE: "32"              # video bitrate limit in Mbit/s (default: 50)
+      ## Run/install on first startup (options: update https gpu ffmpeg tensorflow davfs clitools clean):
+      # PHOTOPRISM_INIT: "https gpu tensorflow"
+      ## Run as a non-root user after initialization (supported: 0, 33, 50-99, 500-600, and 900-1200):
+      # PHOTOPRISM_UID: 1000
+      # PHOTOPRISM_GID: 1000
+      # PHOTOPRISM_UMASK: 0000
+    ## Start as non-root user before initialization (supported: 0, 33, 50-99, 500-600, and 900-1200):
+    # user: "1000:1000"
+    ## Share hardware devices with FFmpeg and TensorFlow (optional):
+    # devices:
+    #  - "/dev/dri:/dev/dri"                         # Intel QSV
+    #  - "/dev/nvidia0:/dev/nvidia0"                 # Nvidia CUDA
+    #  - "/dev/nvidiactl:/dev/nvidiactl"
+    #  - "/dev/nvidia-modeset:/dev/nvidia-modeset"
+    #  - "/dev/nvidia-nvswitchctl:/dev/nvidia-nvswitchctl"
+    #  - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+    #  - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
+    #  - "/dev/video11:/dev/video11"                 # Video4Linux Video Encode Device (h264_v4l2m2m)
+    working_dir: "/photoprism" # do not change or remove
+    ## Storage Folders: "~" is a shortcut for your home directory, "." for the current directory
     volumes:
-      - ./storage:/photoprism/storage
-      - ./photos:/photoprism/originals`
+      # "/host/folder:/photoprism/folder"                # Example
+      - "/ubuntu/mydata/Photos_home:/photoprism/originals"               # Original media files (DO NOT REMOVE)
+      # - "/example/family:/photoprism/originals/family" # *Additional* media folders can be mounted like this
+      # - "~/Import:/photoprism/import"                  # *Optional* base folder from which files can be imported to originals
+      - "./storage:/photoprism/storage"                  # *Writable* storage folder for cache, database, and sidecar files (DO NOT REMOVE)
+    networks:
+      - akke
+
+networks:
+  akke:
+    external: true`
   },
   {
     id: 8,
     name: 'SFTPgo',
-    description: 'SFTP 서버',
+    description: 'SFTP Server',
     url: 'http://file.akke.shop',
-    icon: '📁',
-    dockerConfig: `version: '3'
-services:
-  sftpgo:
-    image: 'drakkan/sftpgo:latest'
-    restart: unless-stopped
-    ports:
-      - '8080:8080'
-      - '2022:2022'
-    volumes:
-      - ./data:/srv/sftpgo/data`
+    icon: 'images/ftp.png',
+    dockerConfig:  `version: "3.8"
+    services:
+      sftpgo:
+        image: drakkan/sftpgo:latest
+        container_name: sftpgo
+        restart: always
+        ports:
+          - "2022:2022"    # SFTP 연결용 포트
+          - "8081:8080"    # 웹 관리 패널 (호스트의 8081 포트로 접근)
+        volumes:
+          - /ubuntu:/var/lib/sftpgo      # SFTPGo 데이터 저장소
+          - ./config:/etc/sftpgo        # SFTPGo 설정 파일 저장소 (필요시 커스터마이즈)
+        environment:
+          - SFTPGO_STORAGE_DRIVER=local
+          - SFTPGO_STORAGE_LOCAL_ROOT_PATH=/var/lib/sftpgo/storage
+        networks:
+          - akke
+    
+    networks:
+      akke:
+        external: true`
   }
 ];
 
