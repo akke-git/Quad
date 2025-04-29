@@ -1,44 +1,37 @@
-// pages/golf/courses.js
+// pages/golf/teams.js
 
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import Navbar from '../../components/Navbar';
 
-export default function GolfCourses() {
+export default function Users() {
   const router = useRouter();
-  const [courses, setCourses] = useState([]);
+  const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // 필터 상태
-  const [locationFilter, setLocationFilter] = useState('');
-  const [sortBy, setSortBy] = useState('name');
+  // 정렬 상태
+  const [sortBy, setSortBy] = useState('username');
   const [sortOrder, setSortOrder] = useState('asc');
-  
-  // 지역 목록 (실제로는 API에서 가져오는 것이 좋음)
-  const locations = ['전체', '부산','대전','울산','경기','강원','전남','경남','경북','충남','광주','충북','대구','제주','서울','세종','인천','전북'];
   
   // 정렬 옵션
   const sortOptions = [
-    { value: 'name', label: '코스명' },
-    { value: 'location', label: '지역' },
-    { value: 'holes', label: '홀 수' },
-    { value: 'par', label: '파' },
+    { value: 'username', label: '사용자명' },
+    { value: 'display_name', label: '표시 이름' },
+    { value: 'handicap', label: '핸디캡' },
     { value: 'created_at', label: '등록일' }
   ];
 
-  // 코스 데이터 가져오기
+  // 사용자 데이터 가져오기
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchUsers = async () => {
       setIsLoading(true);
       try {
         // 쿼리 파라미터 구성
         const params = new URLSearchParams();
-        if (locationFilter && locationFilter !== '전체') {
-          params.append('location', locationFilter);
-        }
         if (sortBy) {
           params.append('sort', sortBy);
           params.append('order', sortOrder);
@@ -47,30 +40,25 @@ export default function GolfCourses() {
         params.append('limit', '1000');
         
         // API 호출
-        const response = await fetch(`/api/golf/courses?${params.toString()}`);
+        const response = await fetch(`/api/golf/users?${params.toString()}`);
         
         if (!response.ok) {
-          throw new Error('코스 목록을 불러오는데 실패했습니다.');
+          throw new Error('사용자 목록을 불러오는데 실패했습니다.');
         }
         
         const data = await response.json();
-        setCourses(data.data || []);
+        setUsers(data.data || []);
         setError(null);
       } catch (err) {
-        console.error('Error fetching courses:', err);
-        setError('코스 목록을 불러오는데 문제가 발생했습니다.');
+        console.error('Error fetching users:', err);
+        setError('사용자 목록을 불러오는데 문제가 발생했습니다.');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchCourses();
-  }, [locationFilter, sortBy, sortOrder]);
-  
-  // 필터 변경 핸들러
-  const handleLocationChange = (e) => {
-    setLocationFilter(e.target.value);
-  };
+    fetchUsers();
+  }, [sortBy, sortOrder]);
   
   // 정렬 변경 핸들러
   const handleSortChange = (e) => {
@@ -85,8 +73,8 @@ export default function GolfCourses() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
-        <title>골프 코스 목록 | Sveltt</title>
-        <meta name="description" content="다양한 골프 코스 정보를 확인하세요" />
+        <title>사용자 관리 | Sveltt Golf</title>
+        <meta name="description" content="골프 앱 사용자 관리" />
       </Head>
 
       <Navbar />
@@ -98,34 +86,22 @@ export default function GolfCourses() {
             &larr; 골프 홈으로
           </Link>
           
-          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 font-ubuntu-mono">
-            골프 코스 목록
-          </h1>
+          <div className="flex justify-between items-center mt-4">
+            <h1 className="text-3xl font-bold text-green-400 mb-6 font-ubuntu-mono">
+              사용자 관리
+            </h1>
+            
+            <Link href="/golf/teams/new">
+              <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
+                새 사용자 등록
+              </button>
+            </Link>
+          </div>
         </div>
         
-        {/* 필터 및 정렬 */}
+        {/* 정렬 */}
         <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* 지역 필터 */}
-            <div className="flex-1">
-              <label htmlFor="location-filter" className="block text-sm font-medium text-gray-300 mb-2">
-                지역 필터
-              </label>
-              <select
-                id="location-filter"
-                value={locationFilter}
-                onChange={handleLocationChange}
-                className="bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                {locations.map((location) => (
-                  <option key={location} value={location === '전체' ? '' : location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* 정렬 */}
             <div className="flex-1">
               <label htmlFor="sort-by" className="block text-sm font-medium text-gray-300 mb-2">
                 정렬 기준
@@ -159,7 +135,7 @@ export default function GolfCourses() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-300">코스 목록을 불러오는 중...</p>
+            <p className="text-gray-300">사용자 목록을 불러오는 중...</p>
           </div>
         )}
         
@@ -170,36 +146,54 @@ export default function GolfCourses() {
           </div>
         )}
         
-        {/* 코스 목록 */}
+        {/* 사용자 목록 */}
         {!isLoading && !error && (
           <>
-            {courses.length === 0 ? (
+            {users.length === 0 ? (
               <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
-                <p className="text-gray-300">등록된 골프 코스가 없습니다.</p>
+                <p className="text-gray-300">등록된 사용자가 없습니다.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {courses.map((course) => (
-                  <div key={course.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:bg-gray-700 transition-colors duration-300 border border-gray-700">
-                    {/* 코스 정보 */}
-                    <div className="p-3">
-                      <div className="flex justify-between items-start mb-1">
-                        <h2 className="text-lg font-semibold text-green-400">{course.name}</h2>
+                {users.map((user) => (
+                  <div key={user.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:bg-gray-700 transition-colors duration-300 border border-gray-700">
+                    <div className="p-4 flex items-center">
+                      {/* 프로필 이미지 */}
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 mr-4 flex-shrink-0">
+                        {user.profile_image ? (
+                          <Image
+                            src={user.profile_image}
+                            alt={user.display_name || user.username}
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover"
+                            unoptimized={true}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+                            👤
+                          </div>
+                        )}
                       </div>
                       
-                      <p className="text-gray-300 text-sm">
-                        <span className="inline-block mr-1">📍</span>
-                        {course.location}
-                      </p>
+                      {/* 사용자 정보 */}
+                      <div className="flex-1">
+                        <h2 className="text-lg font-semibold text-green-400">
+                          {user.display_name || user.username}
+                        </h2>
+                        <p className="text-gray-300 text-sm">@{user.username}</p>
+                        <p className="text-gray-400 text-sm mt-1">
+                          핸디캡: {user.handicap || 'N/A'}
+                        </p>
+                      </div>
                       
-                      <p className="text-gray-300 text-sm mt-1">
-                        <span className="inline-block mr-1">🏠</span>
-                        {course.address || '주소 정보 없음'}
-                      </p>
-                      
-                      <div className="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>{course.holes || 18}홀</span>
-                        <span>파 {course.par || 72}</span>
+                      {/* 작업 버튼 */}
+                      <div className="ml-2">
+                        <Link href={`/golf/teams/${user.id}`}>
+                          <button className="text-green-400 hover:text-green-300 p-1">
+                            수정
+                          </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -209,7 +203,7 @@ export default function GolfCourses() {
             
             {/* 결과 수 표시 */}
             <div className="mt-6 text-right text-gray-400 text-sm">
-              총 {courses.length}개의 코스
+              총 {users.length}명의 사용자
             </div>
           </>
         )}
