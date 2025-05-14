@@ -95,11 +95,11 @@ export default function GolfCourses() {
         {/* 헤더 */}
         <div className="mb-8">
           <Link href="/golf" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
-            &larr; 골프 홈으로
+            &larr; golf home
           </Link>
           
           <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 font-ubuntu-mono">
-            골프 코스 목록
+            golf courses
           </h1>
         </div>
         
@@ -108,8 +108,8 @@ export default function GolfCourses() {
           <div className="flex flex-col md:flex-row gap-4">
             {/* 지역 필터 */}
             <div className="flex-1">
-              <label htmlFor="location-filter" className="block text-sm font-medium text-gray-300 mb-2">
-                지역 필터
+              <label htmlFor="location-filter" className="block text-sm font-medium text-gray-300 mb-2 font-ubuntu-mono">
+                location filter
               </label>
               <select
                 id="location-filter"
@@ -127,8 +127,8 @@ export default function GolfCourses() {
             
             {/* 정렬 */}
             <div className="flex-1">
-              <label htmlFor="sort-by" className="block text-sm font-medium text-gray-300 mb-2">
-                정렬 기준
+              <label htmlFor="sort-by" className="block text-sm font-medium text-gray-300 mb-2 font-ubuntu-mono">
+                sort by
               </label>
               <div className="flex">
                 <select
@@ -159,7 +159,7 @@ export default function GolfCourses() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-300">코스 목록을 불러오는 중...</p>
+            <p className="text-gray-300 font-ubuntu-mono">courses loading...</p>
           </div>
         )}
         
@@ -175,7 +175,7 @@ export default function GolfCourses() {
           <>
             {courses.length === 0 ? (
               <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
-                <p className="text-gray-300">등록된 골프 코스가 없습니다.</p>
+                <p className="text-gray-300 font-ubuntu-mono">courses not found.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -194,7 +194,7 @@ export default function GolfCourses() {
                       
                       <p className="text-gray-300 text-sm mt-1">
                         <span className="inline-block mr-1">🏠</span>
-                        {course.address || '주소 정보 없음'}
+                        {course.address || 'adress not found'}
                       </p>
                       
                       <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -209,7 +209,7 @@ export default function GolfCourses() {
             
             {/* 결과 수 표시 */}
             <div className="mt-6 text-right text-gray-400 text-sm">
-              총 {courses.length}개의 코스
+              total {courses.length} courses
             </div>
           </>
         )}

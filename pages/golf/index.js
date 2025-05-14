@@ -7,15 +7,6 @@ import Image from 'next/image';
 import Navbar from '../../components/Navbar';
 
 export default function GolfHome() {
-  // 골프 메뉴 리스트
-  const golfMenus = [
-    { name: 'Courses', path: '/golf/courses', icon: '🏌️‍♂️' },
-    { name: 'Round Record', path: '/golf/rounds', icon: '📝' },    
-    { name: 'Team-Match', path: '/golf/teams/matches', icon: '🏆' },
-    { name: 'User', path: '/golf/teams', icon: '👥' },
-    { name: 'Settings', path: '/golf/settings', icon: '⚙️' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
@@ -26,28 +17,7 @@ export default function GolfHome() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8">
-        {/* 메뉴 리스트 */}
-        <div className="grid grid-cols-5 md:grid-cols-5 lg:grid-cols-5 gap-1 mb-9">
-          {golfMenus.map((menu, index) => (
-            <Link href={menu.path} key={index}>
-            <div className="bg-gray-800 rounded-lg shadow-md p-2 hover:bg-gray-700 transition-colors duration-300 text-center cursor-pointer border border-gray-700">
-                <div className="flex items-center">
-                    {/* 모바일에서는 아이콘만, PC에서는 아이콘과 텍스트 */}
-                    <span className="text-xl md:ml-1 sm:text-2xl mx-auto md:mx-0">{menu.icon}</span>
-                    <h2 className="text-lg font-semibold text-gray-800 flex-1 text-center hidden md:block text-green-400">{menu.name}</h2>                
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
 
-        {/* 헤더 섹션 */}
-        {/* <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-green-400 mb-4 font-ubuntu-mono">Score Management</h1>
-          <p className="text-xl text-gray-300">
-            Personal golf scores & Team scores
-          </p>
-        </div> */}
 
         {/* 골프 이미지 섹션 */}
         <div className="relative h-80 w-full mb-12 rounded-xl overflow-hidden shadow-lg border border-gray-700">
@@ -86,7 +56,7 @@ export default function GolfHome() {
 
       <footer className="bg-gray-800 text-gray-300 py-3 border-t border-gray-700">
         <div className="container mx-auto px-4 text-center">
-          <p> 2025 Sveltt Golf Score</p>
+          <p> 2025-05-01</p>
         </div>
       </footer>
     </div>
