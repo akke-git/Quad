@@ -15,17 +15,20 @@ export const config = {
 // Helper function to parse form data with files
 const parseForm = async (req) => {
   return new Promise((resolve, reject) => {
-    const form = new IncomingForm({
-      uploadDir: path.join(process.cwd(), 'public/uploads/profiles'),
-      keepExtensions: true,
-      maxFileSize: 5 * 1024 * 1024, // 5MB limit
-    });
-    
     // Ensure upload directory exists
     const uploadDir = path.join(process.cwd(), 'public/uploads/profiles');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
+      console.log('Created upload directory:', uploadDir);
     }
+    
+    // formidable 설정
+    const form = new IncomingForm({
+      uploadDir: uploadDir,
+      keepExtensions: true,
+      maxFileSize: 5 * 1024 * 1024, // 5MB limit
+      multiples: false // 단일 파일만 처리
+    });
     
     form.parse(req, (err, fields, files) => {
       if (err) return reject(err);
@@ -69,7 +72,11 @@ export default async function handler(req, res) {
     case 'POST':
       try {
         // Parse form data with file upload
+        console.log('Parsing form data...');
         const { fields, files } = await parseForm(req);
+        
+        console.log('Form fields:', Object.keys(fields));
+        console.log('Form files:', Object.keys(files));
         
         const { username, email, password, display_name, handicap } = fields;
         
@@ -96,53 +103,83 @@ export default async function handler(req, res) {
         
         // Process profile image if uploaded
         let profileImagePath = null;
-        if (files.profile_image) {
-          const file = files.profile_image;
-          
-          // 디버깅을 위해 파일 객체 속성 출력
-          console.log('File object properties:', Object.keys(file));
-          console.log('File filepath:', file.filepath);
-          
-          // 간단한 방법으로 파일 처리
-          // 파일 이름에서 확장자를 추출하지 않고 고정 확장자 사용
-          const fileName = `user_${Date.now()}.jpg`;
-          const newPath = path.join(process.cwd(), 'public/uploads/profiles', fileName);
-          profileImagePath = `/uploads/profiles/${fileName}`;
-          
-          try {
-            // 업로드 디렉토리 확인 및 생성
-            const uploadDir = path.join(process.cwd(), 'public/uploads/profiles');
-            if (!fs.existsSync(uploadDir)) {
-              fs.mkdirSync(uploadDir, { recursive: true });
-              console.log('Created upload directory:', uploadDir);
-            }
+        console.log('Files object:', files);
+        
+        try {
+          // 프로필 이미지 처리
+          if (files && files.profile_image) {
+            const fileList = files.profile_image;
+            const file = Array.isArray(fileList) ? fileList[0] : fileList;
             
-            // 파일 복사
-            fs.copyFileSync(file.filepath, newPath);
-            console.log('File copied successfully to:', newPath);
-            console.log('Profile image path set to:', profileImagePath);
-          } catch (err) {
-            console.error('Error copying file:', err);
-            // 오류 발생 시 기본 이미지 경로 설정
-            profileImagePath = null;
+            console.log('File object:', file);
+            console.log('File properties:', Object.keys(file));
+            
+            // 파일이 존재하고 경로가 있는 경우
+            if (file.filepath) {
+              // 파일명 추출
+              const filename = path.basename(file.filepath);
+              
+              // 웹 URL 형식으로 경로 설정 (백슬래시를 슬래시로 변환)
+              profileImagePath = `/uploads/profiles/${filename}`.replace(/\\/g, '/');
+              
+              console.log('Profile image path for DB:', profileImagePath);
+              
+              // 경로가 정상적으로 생성되었는지 확인
+              if (!profileImagePath || profileImagePath === '/uploads/profiles/') {
+                console.error('Invalid profile image path generated');
+                
+                // 직접 경로 설정 (테스트용)
+                profileImagePath = '/uploads/profiles/' + filename;
+                console.log('Fallback profile image path:', profileImagePath);
+              }
+            } else {
+              console.log('No filepath in the file object');
+            }
+          } else {
+            console.log('No profile image uploaded');
           }
+        } catch (err) {
+          console.error('Error processing profile image:', err);
+          profileImagePath = null;
         }
         
         console.log('Final profile image path:', profileImagePath);
+        
+        // 값 확인 및 디버깅
+        console.log('username type:', typeof username, 'value:', username);
+        console.log('email type:', typeof email, 'value:', email);
+        console.log('password type:', typeof password, 'value:', password);
+        console.log('display_name type:', typeof display_name, 'value:', display_name);
+        console.log('handicap type:', typeof handicap, 'value:', handicap);
+        console.log('profileImagePath type:', typeof profileImagePath, 'value:', profileImagePath);
+        
+        // 쿼리 파라미터 준비 (배열이 아닌 값을 확인)
+        const usernameValue = Array.isArray(username) ? username[0] : username;
+        const emailValue = Array.isArray(email) ? email[0] : email;
+        const passwordValue = Array.isArray(password) ? password[0] : password;
+        const displayNameValue = Array.isArray(display_name) ? display_name[0] : (display_name || usernameValue);
+        const handicapValue = Array.isArray(handicap) ? handicap[0] : (handicap || null);
+        
+        const queryParams = [
+          usernameValue,
+          emailValue,
+          passwordValue,
+          displayNameValue,
+          handicapValue,
+          profileImagePath
+        ];
+        
+        console.log('Final query parameters for insert:', queryParams);
         
         // Insert new user
         const result = await golfQuery(
           `INSERT INTO users (username, email, password, display_name, handicap, profile_image) 
            VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            username, 
-            email, 
-            password, // In a real app, you should hash this password
-            display_name || username, 
-            handicap || null, 
-            profileImagePath
-          ]
+          queryParams
         );
+        
+        // 삽입 결과 확인
+        console.log('Insert result:', result);
         
         res.status(201).json({ 
           success: true, 

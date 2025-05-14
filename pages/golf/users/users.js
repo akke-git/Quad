@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../../components/Navbar';
 
 export default function Users() {
   const router = useRouter();
@@ -19,10 +19,10 @@ export default function Users() {
   
   // 정렬 옵션
   const sortOptions = [
-    { value: 'username', label: '사용자명' },
-    { value: 'display_name', label: '표시 이름' },
-    { value: 'handicap', label: '핸디캡' },
-    { value: 'created_at', label: '등록일' }
+    { value: 'username', label: 'Username' },
+    { value: 'display_name', label: 'Display Name' },
+    { value: 'handicap', label: 'Handicap' },
+    { value: 'created_at', label: 'Created At' }
   ];
 
   // 사용자 데이터 가져오기
@@ -43,7 +43,7 @@ export default function Users() {
         const response = await fetch(`/api/golf/users?${params.toString()}`);
         
         if (!response.ok) {
-          throw new Error('사용자 목록을 불러오는데 실패했습니다.');
+          throw new Error('Failed to fetch users');
         }
         
         const data = await response.json();
@@ -51,7 +51,7 @@ export default function Users() {
         setError(null);
       } catch (err) {
         console.error('Error fetching users:', err);
-        setError('사용자 목록을 불러오는데 문제가 발생했습니다.');
+        setError('Failed to fetch users');
       } finally {
         setIsLoading(false);
       }
@@ -73,8 +73,8 @@ export default function Users() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
-        <title>사용자 관리 | Sveltt Golf</title>
-        <meta name="description" content="골프 앱 사용자 관리" />
+        <title>Users Management | Sveltt Golf</title>
+        <meta name="description" content="Golf app user management" />
       </Head>
 
       <Navbar />
@@ -83,33 +83,33 @@ export default function Users() {
         {/* 헤더 */}
         <div className="mb-8">
           <Link href="/golf" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
-            &larr; 골프 홈으로
+            &larr; Golf Home
           </Link>
           
           <div className="flex justify-between items-center mt-4">
             <h1 className="text-3xl font-bold text-green-400 mb-6 font-ubuntu-mono">
-              사용자 관리
+              Users Management
             </h1>
             
-            <Link href="/golf/teams/new">
-              <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
-                새 사용자 등록
+            <Link href="/golf/users/new">
+              <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 font-ubuntu-mono">
+                New User
               </button>
             </Link>
           </div>
         </div>
         
         {/* 정렬 */}
-        <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
+        <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700 font-ubuntu-mono">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <label htmlFor="sort-by" className="block text-sm font-medium text-gray-300 mb-2">
-                정렬 기준
+                Sort by
               </label>
               <div className="flex">
                 <select
                   id="sort-by"
-                  value={sortBy}
+                  value={sortBy}  
                   onChange={handleSortChange}
                   className="bg-gray-700 text-white border border-gray-600 rounded-l-md px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
@@ -135,7 +135,7 @@ export default function Users() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-300">사용자 목록을 불러오는 중...</p>
+            <p className="text-gray-300">Loading users...</p>
           </div>
         )}
         
@@ -151,26 +151,23 @@ export default function Users() {
           <>
             {users.length === 0 ? (
               <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
-                <p className="text-gray-300">등록된 사용자가 없습니다.</p>
+                <p className="text-gray-300">No users found.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-ubuntu-mono">
                 {users.map((user) => (
                   <div key={user.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:bg-gray-700 transition-colors duration-300 border border-gray-700">
                     <div className="p-4 flex items-center">
                       {/* 프로필 이미지 */}
-                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 mr-4 flex-shrink-0">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-700 mr-4 flex-shrink-0">
                         {user.profile_image ? (
-                          <Image
+                          <img
                             src={user.profile_image}
                             alt={user.display_name || user.username}
-                            width={64}
-                            height={64}
                             className="w-full h-full object-cover"
-                            unoptimized={true}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
                             👤
                           </div>
                         )}
@@ -183,15 +180,15 @@ export default function Users() {
                         </h2>
                         <p className="text-gray-300 text-sm">@{user.username}</p>
                         <p className="text-gray-400 text-sm mt-1">
-                          핸디캡: {user.handicap || 'N/A'}
+                          Handicap: {user.handicap || 'N/A'}
                         </p>
                       </div>
                       
                       {/* 작업 버튼 */}
                       <div className="ml-2">
-                        <Link href={`/golf/teams/${user.id}`}>
+                        <Link href={`/golf/users/${user.id}`}>
                           <button className="text-green-400 hover:text-green-300 p-1">
-                            수정
+                            Edit
                           </button>
                         </Link>
                       </div>
@@ -203,7 +200,7 @@ export default function Users() {
             
             {/* 결과 수 표시 */}
             <div className="mt-6 text-right text-gray-400 text-sm">
-              총 {users.length}명의 사용자
+              Total {users.length} users
             </div>
           </>
         )}

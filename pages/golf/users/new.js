@@ -89,7 +89,7 @@ export default function NewUser() {
       }
       
       // 성공 시 사용자 목록 페이지로 이동
-      router.push('/golf/teams');
+      router.push('/golf/users/users');
     } catch (err) {
       console.error('Error registering user:', err);
       setError(err.message || '사용자 등록 중 오류가 발생했습니다.');
@@ -110,7 +110,7 @@ export default function NewUser() {
       <main className="container mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="mb-8">
-          <Link href="/golf/teams" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
+          <Link href="/golf/users/users" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
             &larr; 사용자 목록으로
           </Link>
           
@@ -151,6 +151,7 @@ export default function NewUser() {
                 프로필 이미지 선택
                 <input
                   type="file"
+                  name="profile_image"
                   accept="image/*"
                   onChange={handleImageChange}
                   className="hidden"

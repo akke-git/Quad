@@ -4,6 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function BlogPostCard({ post }) {
+  // post가 없는 경우 빈 객체로 초기화하여 오류 방지
+  if (!post) {
+    return null; // 또는 기본 카드 표시
+  }
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:transform hover:scale-105 border border-gray-700 h-full flex flex-col">
       <div className="relative h-48 w-full">
