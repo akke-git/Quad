@@ -1,6 +1,6 @@
 // pages/golf/teams/new.js
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,6 +8,8 @@ import { useRouter } from 'next/router';
 import Navbar from '../../../components/Navbar';
 
 export default function NewUser() {
+
+
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: '',
@@ -21,6 +23,13 @@ export default function NewUser() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isClient, setIsClient] = useState(false);
+  
+  // 클라이언트에서만 렌더링되도록 설정
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   
   // 입력 필드 변경 핸들러
   const handleChange = (e) => {
@@ -85,14 +94,14 @@ export default function NewUser() {
       const result = await response.json();
       
       if (!response.ok) {
-        throw new Error(result.message || '사용자 등록에 실패했습니다.');
+        throw new Error(result.message || 'User registration failed.');
       }
       
       // 성공 시 사용자 목록 페이지로 이동
       router.push('/golf/users/users');
     } catch (err) {
       console.error('Error registering user:', err);
-      setError(err.message || '사용자 등록 중 오류가 발생했습니다.');
+      setError(err.message || 'User registration failed.');
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +110,8 @@ export default function NewUser() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
-        <title>새 사용자 등록 | Sveltt Golf</title>
-        <meta name="description" content="골프 앱 새 사용자 등록" />
+        <title>{"User Registration | Sveltt"}</title>
+        <meta name="description" content="New user registration" />
       </Head>
 
       <Navbar />
@@ -110,12 +119,18 @@ export default function NewUser() {
       <main className="container mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="mb-8">
-          <Link href="/golf/users/users" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
-            &larr; 사용자 목록으로
-          </Link>
+          {isClient ? (
+            <Link href="/golf/users/users" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
+              &larr; back user list
+            </Link>
+          ) : (
+            <span className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
+              &larr; back user list
+            </span>
+          )}
           
-          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 font-ubuntu-mono">
-            새 사용자 등록
+          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 font-ubuntu-mono" suppressHydrationWarning>
+            User Registration
           </h1>
         </div>
         
@@ -148,7 +163,7 @@ export default function NewUser() {
               </div>
               
               <label className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 cursor-pointer">
-                프로필 이미지 선택
+                Profile Image
                 <input
                   type="file"
                   name="profile_image"
@@ -163,7 +178,7 @@ export default function NewUser() {
               {/* 사용자명 */}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                  사용자명 *
+                  Username *
                 </label>
                 <input
                   type="text"
@@ -179,7 +194,7 @@ export default function NewUser() {
               {/* 이메일 */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  이메일 *
+                  Email *
                 </label>
                 <input
                   type="email"
@@ -195,7 +210,7 @@ export default function NewUser() {
               {/* 비밀번호 */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  비밀번호 *
+                  Password *
                 </label>
                 <input
                   type="password"
@@ -211,7 +226,7 @@ export default function NewUser() {
               {/* 비밀번호 확인 */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                  비밀번호 확인 *
+                  Confirm Password *
                 </label>
                 <input
                   type="password"
@@ -227,7 +242,7 @@ export default function NewUser() {
               {/* 표시 이름 */}
               <div>
                 <label htmlFor="display_name" className="block text-sm font-medium text-gray-300 mb-2">
-                  표시 이름
+                  Display Name
                 </label>
                 <input
                   type="text"
@@ -242,7 +257,7 @@ export default function NewUser() {
               {/* 핸디캡 */}
               <div>
                 <label htmlFor="handicap" className="block text-sm font-medium text-gray-300 mb-2">
-                  핸디캡
+                  Handicap
                 </label>
                 <input
                   type="number"
@@ -270,10 +285,10 @@ export default function NewUser() {
                 {isLoading ? (
                   <span className="flex items-center">
                     <span className="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></span>
-                    처리 중...
+                    Processing...
                   </span>
                 ) : (
-                  '사용자 등록'
+                  'User Registration'
                 )}
               </button>
             </div>
@@ -283,7 +298,7 @@ export default function NewUser() {
 
       <footer className="bg-gray-800 text-gray-300 py-3 border-t border-gray-700 mt-12">
         <div className="container mx-auto px-4 text-center">
-          <p> 2025 Sveltt Golf Score</p>
+          <p> 2025 Sveltt</p>
         </div>
       </footer>
     </div>
