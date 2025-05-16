@@ -88,7 +88,7 @@ export default function Users() {
           
           <div className="flex justify-between items-center mt-4">
             <h1 className="text-3xl font-bold text-green-400 mb-6 font-ubuntu-mono">
-              Users Management
+              Users Management new
             </h1>
             
             <Link href="/golf/users/new">

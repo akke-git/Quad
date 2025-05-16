@@ -24,7 +24,7 @@ export default function BlogPostCard({ post }) {
       <div className="p-6 flex-1 flex flex-col">
         <div className="flex-1">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-medium text-green-400 bg-green-900 bg-opacity-30 px-2 py-1 rounded font-nanum-gothic">
+            <span className="text-xs font-medium text-green-400 bg-green-900 bg-opacity-30 px-2 py-1 rounded font-ubuntu-mono">
               {post.category}
             </span>
             <span className="text-xs text-gray-400 font-ubuntu-mono">
@@ -38,7 +38,7 @@ export default function BlogPostCard({ post }) {
             </Link>
           </h3>
           
-          <p className="text-gray-300 text-sm mb-4 line-clamp-3 font-nanum-gothic">
+          <p className="text-gray-300 text-sm mb-4 line-clamp-3 font-ubuntu-mono">
             {post.excerpt}
           </p>
         </div>
@@ -46,9 +46,9 @@ export default function BlogPostCard({ post }) {
         <div className="flex justify-between items-center mt-4">
           <Link 
             href={`/blog/${post.id}`}
-            className="text-green-400 hover:text-green-300 text-sm font-medium transition-colors duration-300 font-nanum-gothic"
+            className="text-green-400 hover:text-green-300 text-sm font-medium transition-colors duration-300 font-ubuntu-mono"
           >
-            자세히 보기 &rarr;
+            Read More &rarr;
           </Link>
           
           {post.source && (
@@ -56,9 +56,9 @@ export default function BlogPostCard({ post }) {
               href={post.source}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-gray-400 hover:text-gray-300 transition-colors duration-300 font-nanum-gothic"
+              className="text-xs text-gray-400 hover:text-gray-300 transition-colors duration-300 font-ubuntu-mono"
             >
-              출처
+              Source
             </a>
           )}
         </div>

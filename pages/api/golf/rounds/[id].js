@@ -5,41 +5,41 @@ import { golfQuery } from '../../../../lib/db';
 export default async function handler(req, res) {
   const { id } = req.query;
   
-  // PUT 요청 처리 (라운드 업데이트)
+  // Process PUT request (update round)
   if (req.method === 'PUT') {
     try {
       const { user_id, course_id, play_date, weather, notes, scores } = req.body;
       
-      // 필수 필드 검증
+      // Validate required fields
       if (!user_id || !course_id || !play_date || !scores || !Array.isArray(scores) || !id) {
         return res.status(400).json({
           status: 'error',
-          message: '필수 필드가 누락되었습니다'
+          message: 'Required fields are missing'
         });
       }
       
-      // 유효한 스코어가 있는지 확인
+      // Check if there are valid scores
       if (scores.length === 0) {
         return res.status(400).json({
           status: 'error',
-          message: '최소 한 홀 이상의 스코어가 필요합니다'
+          message: 'At least one hole score is required'
         });
       }
       
-      // 총 스코어 계산 (입력된 홀만)
+      // Calculate total score (only for entered holes)
       const total_score = scores.reduce((sum, hole) => sum + (hole.score || 0), 0);
       
-      // 트랜잭션 시작
+      // Start transaction
       await golfQuery('START TRANSACTION');
       
-      // 날짜 형식 변환 (ISO 형식을 MySQL 형식으로)
+      // Convert date format (ISO format to MySQL format)
       let formattedDate = play_date;
       if (play_date && play_date.includes('T')) {
-        // ISO 형식의 날짜인 경우 'YYYY-MM-DD' 형식으로 변환
+        // If date is in ISO format, convert to 'YYYY-MM-DD' format
         formattedDate = play_date.split('T')[0];
       }
       
-      // 라운드 정보 업데이트
+      // Update round information
       await golfQuery(
         `UPDATE rounds 
          SET course_id = ?, play_date = ?, weather = ?, total_score = ?, notes = ?
@@ -47,10 +47,10 @@ export default async function handler(req, res) {
         [course_id, formattedDate, weather, total_score, notes, id, user_id]
       );
       
-      // 기존 홀 스코어 삭제 (새로운 데이터로 대체)
+      // Delete existing hole scores (replace with new data)
       await golfQuery('DELETE FROM hole_scores WHERE round_id = ?', [id]);
       
-      // 각 홀 스코어 삽입
+      // Insert each hole score
       for (const holeScore of scores) {
         await golfQuery(
           `INSERT INTO hole_scores (
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
       
       return res.status(200).json({
         status: 'success',
-        message: '라운드가 성공적으로 업데이트되었습니다',
+        message: 'Round successfully updated',
         data: {
           round_id: id,
           total_score
@@ -96,15 +96,15 @@ export default async function handler(req, res) {
       console.error('Error updating round:', error);
       return res.status(500).json({
         status: 'error',
-        message: '라운드 업데이트에 실패했습니다'
+        message: 'Failed to update round'
       });
     }
   }
   
-  // GET 요청 처리 (단일 라운드 조회)
+  // Process GET request (retrieve single round)
   if (req.method === 'GET') {
     try {
-      // 라운드 기본 정보 조회
+      // Retrieve basic round information
       const roundQuery = `
         SELECT r.*, c.name as course_name, c.location as course_location 
         FROM rounds r
@@ -117,11 +117,11 @@ export default async function handler(req, res) {
       if (rounds.length === 0) {
         return res.status(404).json({
           status: 'error',
-          message: '라운드를 찾을 수 없습니다'
+          message: 'Round not found'
         });
       }
       
-      // 홀 스코어 조회
+      // Retrieve hole scores
       const scoresQuery = `
         SELECT * FROM hole_scores
         WHERE round_id = ?
@@ -130,7 +130,7 @@ export default async function handler(req, res) {
       
       const scores = await golfQuery(scoresQuery, [id]);
       
-      // 응답 데이터 구성
+      // Construct response data
       const roundData = {
         ...rounds[0],
         scores
@@ -144,21 +144,21 @@ export default async function handler(req, res) {
       console.error('Error fetching round:', error);
       return res.status(500).json({
         status: 'error',
-        message: '라운드 조회에 실패했습니다'
+        message: 'Failed to retrieve round'
       });
     }
   }
   
-  // DELETE 요청 처리 (라운드 삭제)
+  // Process DELETE request (delete round)
   if (req.method === 'DELETE') {
     try {
-      // 트랜잭션 시작
+      // Start transaction
       await golfQuery('START TRANSACTION');
       
-      // 홀 스코어 삭제
+      // Delete hole scores
       await golfQuery('DELETE FROM hole_scores WHERE round_id = ?', [id]);
       
-      // 라운드 삭제
+      // Delete round
       await golfQuery('DELETE FROM rounds WHERE id = ?', [id]);
       
       // 트랜잭션 커밋
@@ -166,7 +166,7 @@ export default async function handler(req, res) {
       
       return res.status(200).json({
         status: 'success',
-        message: '라운드가 성공적으로 삭제되었습니다'
+        message: 'Round successfully deleted'
       });
     } catch (error) {
       // 오류 발생 시 롤백
@@ -175,14 +175,14 @@ export default async function handler(req, res) {
       console.error('Error deleting round:', error);
       return res.status(500).json({
         status: 'error',
-        message: '라운드 삭제에 실패했습니다'
+        message: 'Failed to delete round'
       });
     }
   }
   
-  // 지원하지 않는 HTTP 메서드
+  // Unsupported HTTP method
   return res.status(405).json({
     status: 'error',
-    message: '지원하지 않는 메서드입니다'
+    message: 'Unsupported method'
   });
 }
