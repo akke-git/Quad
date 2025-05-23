@@ -13,11 +13,18 @@ export default function NewRound() {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [courseHolesData, setCourseHolesData] = useState(null); // 코스 홀 정보 저장
+  const [dataLoaded, setDataLoaded] = useState(false); // 홀 데이터 로드 상태
+  const [courseNames, setCourseNames] = useState([]); // 코스 이름 목록 저장
+  const [selectedCourseNames, setSelectedCourseNames] = useState([]); // 선택된 코스 이름 목록
+  const [currentHole, setCurrentHole] = useState(1); // 현재 선택된 홀
+  const [quickInputMode, setQuickInputMode] = useState(true); // 퀵입력 모드 활성화 여부
   
   // 폼 데이터
   const [formData, setFormData] = useState({
     user_id: userId || '', // 라우터에서 가져온 사용자 ID
     course_id: '',
+    course_names: [], // 코스 이름 배열로 변경
     play_date: new Date().toISOString().split('T')[0], // 오늘 날짜를 기본값으로
     weather: '', // 날씨 정보 추가
     notes: '', // 메모 추가
@@ -28,17 +35,18 @@ export default function NewRound() {
       putts: null,
       penalty_strokes: 0 // 페널티 스트로크
     }))
-  });
-  
-  // 모바일 입력 인터페이스 관련 상태
-  const [currentHole, setCurrentHole] = useState(1); // 현재 선택된 홀
-  const [quickInputMode, setQuickInputMode] = useState(true); // 퀴입력 모드 활성화 여부
+  })
+
+
 
   // 코스 목록 가져오기
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch('/api/golf/courses');
+        // 코스 목록 가져오기 - 최대 1000개까지 가져오도록 limit 파라미터 추가
+        console.log('코스 목록 요청 시작');
+        const response = await fetch('/api/golf/courses?limit=1200');
+        console.log('코스 목록 응답 받음');
         if (!response.ok) {
           throw new Error('Failed to fetch courses');
         }
@@ -74,16 +82,292 @@ export default function NewRound() {
     fetchCourses();
   }, []);
 
+  // 코스 ID와 코스 이름을 받아 홀 정보를 로드하는 함수
+  const loadHoleInfo = async (courseId, courseName) => {
+    try {
+      console.log('홀 정보 로드 시작:', courseId, courseName);
+      
+      // 홀 정보 API 호출
+      const response = await fetch(`/api/golf/course-holes?course_id=${courseId}&course_name=${courseName}`);
+      
+      if (!response.ok) {
+        throw new Error(`코스 홀 정보를 가져오는데 실패했습니다: ${courseName}`);
+      }
+      
+      const data = await response.json();
+      const responseData = data.data || {};
+      console.log('홀 정보 로드 완료:', responseData);
+      
+      // 홀 정보가 있으면 처리
+      if (responseData.holes && responseData.holes.length > 0) {
+        // 홀 정보와 데이터 로드 상태 업데이트
+        setCourseHolesData(responseData);
+        setDataLoaded(true);
+        
+        // 홀 정보 오름차순 정렬
+        const sortedHoles = [...responseData.holes].sort((a, b) => a.hole_number - b.hole_number);
+        console.log('정렬된 홀 정보:', sortedHoles);
+        
+        // 파 정보 업데이트
+        setFormData(prev => {
+          // 기존 스코어 배열 복사
+          const updatedScores = [...prev.scores];
+          
+          // 각 홀에 대해 파 정보 업데이트
+          for (let i = 0; i < updatedScores.length; i++) {
+            // 해당 홀 번호에 대한 홀 정보 찾기
+            const holeNumber = i + 1; // 홀 번호는 1부터 시작
+            
+            // 홀 번호가 10 이상인 경우 1-9 홀 정보 사용
+            const matchHoleNumber = holeNumber > 9 ? holeNumber - 9 : holeNumber;
+            const holeInfo = sortedHoles.find(hole => hole.hole_number === matchHoleNumber);
+            
+            console.log(`홀 ${holeNumber} 정보 찾기 (매칭 홀: ${matchHoleNumber}):`, holeInfo);
+            
+            if (holeInfo) {
+              // 홀 정보가 있는 경우 파 정보 업데이트
+              console.log(`홀 ${holeNumber} 파 정보 업데이트: ${holeInfo.par}`);
+              updatedScores[i] = {
+                ...updatedScores[i],
+                hole_number: holeNumber,
+                par: holeInfo.par,
+                original_hole_number: holeInfo.hole_number,
+                course_name: holeInfo.course_name || responseData.selectedCourseName || courseName || ''
+              };
+            }
+          }
+          
+          console.log('업데이트된 스코어 배열:', updatedScores);
+          
+          return {
+            ...prev,
+            scores: updatedScores
+          };
+        });
+        
+        console.log('파 정보가 업데이트되었습니다');
+      }
+    } catch (error) {
+      console.error('홀 정보 로드 오류:', error);
+    }
+  };
+
   // 폼 입력 핸들러
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+
+    // 코스 선택 시 해당 코스의 코스 이름 목록 가져오기
+    if (name === 'course_id' && value) {
+      try {
+        console.log('코스 선택됨:', value);
+        // 데이터 로드 상태 초기화
+        setDataLoaded(false);
+        setCourseHolesData(null);
+        setCourseNames([]);
+        setSelectedCourseNames([]);
+        setFormData(prev => ({ ...prev, course_names: [] })); // 코스 이름 초기화
+        
+        console.log('코스 선택 시 API 호출:', value);
+        const response = await fetch(`/api/golf/course-holes?course_id=${value}`);
+        
+        if (!response.ok) {
+          throw new Error('코스 정보를 가져오는데 실패했습니다');
+        }
+        
+        const data = await response.json();
+        const responseData = data.data || {};
+        console.log('코스 정보 받음:', responseData);
+        
+        // API 응답 구조 확인
+        if (responseData) {
+          console.log('코스 이름:', responseData.courseName);
+          console.log('코스 이름 목록:', responseData.courseNames);
+          console.log('홀 정보:', responseData.holes);
+        }
+        
+        // 코스 이름 목록이 있으면 저장
+        if (responseData.courseNames && responseData.courseNames.length > 0) {
+          setCourseNames(responseData.courseNames);
+          console.log('코스 이름 목록 업데이트됨:', responseData.courseNames);
+          
+          // 코스 이름 자동 선택 처리
+          let autoSelectedNames = [];
+          if (responseData.courseNames.length === 1) {
+            // 1개일 경우 자동 선택
+            autoSelectedNames = [responseData.courseNames[0]];
+          } else if (responseData.courseNames.length === 2) {
+            // 2개일 경우 모두 자동 선택
+            autoSelectedNames = [...responseData.courseNames];
+          } else if (responseData.courseNames.length > 2) {
+            // 3개 이상일 경우 앞의 2개 자동 선택
+            autoSelectedNames = [responseData.courseNames[0], responseData.courseNames[1]];
+          }
+          
+          setSelectedCourseNames(autoSelectedNames);
+          setFormData(prev => ({ ...prev, course_names: autoSelectedNames }));
+          
+          // 코스 이름이 선택되면 바로 홀 정보 로드
+          if (autoSelectedNames.length > 0) {
+            console.log('선택된 코스 이름으로 홀 정보 로드 시도:', autoSelectedNames[0]);
+            loadHoleInfo(value, autoSelectedNames[0]);
+          }
+        } else if (responseData.holes && responseData.holes.length > 0) {
+          // 코스 이름 목록이 없고 홀 정보가 있는 경우 (이전 버전 호환성)
+          console.log('홀 정보 발견:', responseData.holes);
+          
+          // 홀 정보와 데이터 로드 상태 업데이트
+          setCourseHolesData(responseData);
+          setDataLoaded(true);
+          
+          // 홀 정보 오름차순 정렬
+          const sortedHoles = [...responseData.holes].sort((a, b) => a.hole_number - b.hole_number);
+          console.log('정렬된 홀 정보:', sortedHoles);
+          
+          // 파 정보 업데이트
+          setFormData(prev => {
+            // 기존 스코어 배열 복사
+            const updatedScores = [...prev.scores];
+            
+            // 각 홀에 대해 파 정보 업데이트
+            for (let i = 0; i < updatedScores.length; i++) {
+              // 해당 홀 번호에 대한 홀 정보 찾기
+              const holeNumber = i + 1; // 홀 번호는 1부터 시작
+              
+              // 홀 번호가 10 이상인 경우 1-9 홀 정보 사용
+              const matchHoleNumber = holeNumber > 9 ? holeNumber - 9 : holeNumber;
+              const holeInfo = sortedHoles.find(hole => hole.hole_number === matchHoleNumber);
+              
+              console.log(`홀 ${holeNumber} 정보 찾기 (매칭 홀: ${matchHoleNumber}):`, holeInfo);
+              
+              if (holeInfo) {
+                // 홀 정보가 있는 경우 파 정보 업데이트
+                console.log(`홀 ${holeNumber} 파 정보 업데이트: ${holeInfo.par}`);
+                updatedScores[i] = {
+                  ...updatedScores[i],
+                  hole_number: holeNumber,
+                  par: holeInfo.par,
+                  original_hole_number: holeInfo.hole_number,
+                  course_name: holeInfo.course_name || responseData.selectedCourseName || ''
+                };
+              }
+            }
+            
+            console.log('업데이트된 스코어 배열:', updatedScores);
+            
+            return {
+              ...prev,
+              scores: updatedScores
+            };
+          });
+          
+          console.log('파 정보가 업데이트되었습니다');
+        }
+      } catch (error) {
+        console.error('코스 정보 가져오기 오류:', error);
+      }
+    }
+    
+    // 코스 이름 체크박스 변경 처리
+    if (name === 'course_name_checkbox') {
+      const courseName = e.target.value;
+      const isChecked = e.target.checked;
+      
+      // 선택된 코스 이름 목록 업데이트
+      let newSelectedCourseNames = [...selectedCourseNames];
+      
+      if (isChecked && !newSelectedCourseNames.includes(courseName)) {
+        newSelectedCourseNames.push(courseName);
+      } else if (!isChecked && newSelectedCourseNames.includes(courseName)) {
+        newSelectedCourseNames = newSelectedCourseNames.filter(name => name !== courseName);
+      }
+      
+      setSelectedCourseNames(newSelectedCourseNames);
+      setFormData(prev => ({
+        ...prev,
+        course_names: newSelectedCourseNames
+      }));
+      
+      // 선택된 코스 이름이 있을 경우 홀 정보 가져오기
+      if (newSelectedCourseNames.length > 0 && formData.course_id) {
+        try {
+          const courseId = formData.course_id;
+          console.log('코스 홀 정보 가져오기:', courseId, newSelectedCourseNames);
+          // 데이터 로드 상태 초기화
+          setDataLoaded(false);
+          setCourseHolesData(null);
+          
+          // 모든 선택된 코스 이름에 대한 홀 정보 가져오기
+          const holesDataPromises = newSelectedCourseNames.map(courseName => 
+            fetch(`/api/golf/course-holes?course_id=${courseId}&course_name=${courseName}`)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`코스 홀 정보를 가져오는데 실패했습니다: ${courseName}`);
+                }
+                return response.json();
+              })
+              .then(data => ({
+                courseName,
+                data: data.data || {}
+              }))
+          );
+          
+          // 모든 코스 이름에 대한 홀 정보 가져오기 완료 대기
+          const allCoursesData = await Promise.all(holesDataPromises);
+          console.log('모든 코스 홀 정보 받음:', allCoursesData);
+          
+          // 첫 번째 코스 이름의 홀 정보를 기본으로 저장
+          if (allCoursesData.length > 0 && allCoursesData[0].data.holes && allCoursesData[0].data.holes.length > 0) {
+            setCourseHolesData(allCoursesData[0].data);
+            setDataLoaded(true); // 데이터 로드 완료 표시
+            
+            setFormData(prev => {
+              // 기존 스코어 배열 복사
+              const updatedScores = [...prev.scores];
+              
+              // 각 코스의 홀 정보를 순서대로 배정
+              allCoursesData.forEach((courseData, courseIndex) => {
+                if (courseData.data.holes && courseData.data.holes.length > 0) {
+                  const courseHoles = courseData.data.holes;
+                  const startHoleIndex = courseIndex * 9; // 첫 번째 코스는 0-8, 두 번째 코스는 9-17
+                  
+                  // 해당 코스의 홀 정보 배정
+                  courseHoles.forEach((holeInfo, holeIndex) => {
+                    const targetIndex = startHoleIndex + holeIndex;
+                    
+                    // 18홀을 초과하지 않도록 확인
+                    if (targetIndex < 18) {
+                      updatedScores[targetIndex] = {
+                        ...updatedScores[targetIndex],
+                        hole_number: targetIndex + 1, // 1부터 시작하는 홀 번호
+                        par: holeInfo.par,
+                        original_hole_number: holeInfo.hole_number, // 원래 홀 번호 저장
+                        course_name: courseData.courseName // 해당 홀의 코스 이름 저장
+                      };
+                    }
+                  });
+                }
+              });
+              
+              console.log('업데이트된 스코어:', updatedScores);
+              return {
+                ...prev,
+                scores: updatedScores
+              };
+            });
+            
+            console.log('파 정보가 업데이트되었습니다');
+          }
+        } catch (error) {
+          console.error('코스 홀 정보 가져오기 오류:', error);
+        }
+      }
+    }
   };
 
-  // 홀 스코어 입력 핸들러
   const handleScoreChange = (index, field, value) => {
     setFormData(prev => {
       const newScores = [...prev.scores];
@@ -113,19 +397,29 @@ export default function NewRound() {
       return;
     }
     
-    // 입력된 홀 스코어만 필터링
-    const validScores = formData.scores.filter(score => score.score && score.score > 0);
+    // 모든 홀 스코어를 처리하되, 사용자가 입력하지 않은 홀은 par 값을 score로 사용
+    const processedScores = formData.scores.map(score => {
+      // 사용자가 스코어를 입력하지 않았다면 par 값을 score로 사용
+      if (!score.score || score.score <= 0) {
+        return {
+          ...score,
+          score: score.par // par 값을 score로 설정
+        };
+      }
+      return score; // 이미 스코어가 입력된 홀은 그대로 사용
+    });
     
-    // 최소 하나 이상의 홀 스코어가 있는지 확인
-    if (validScores.length === 0) {
+    // 최소 하나 이상의 홀이 있는지 확인 (항상 true이지만 안전을 위해 유지)
+    if (processedScores.length === 0) {
       alert('최소 한 홀 이상의 스코어를 입력해주세요.');
       return;
     }
     
-    // 제출할 데이터 준비 - 유효한 스코어만 포함
+    // 제출할 데이터 준비 - 모든 홀 스코어 포함
     const submissionData = {
       ...formData,
-      scores: validScores
+      course_name: formData.course_names.length > 0 ? formData.course_names[0] : '', // 첫 번째 코스 이름을 기본으로 사용
+      scores: processedScores
     };
     
     try {
@@ -167,10 +461,22 @@ export default function NewRound() {
   };
 
   
-  // 퀴입력 모드에서 점수 조절 핸들러
+  // 퀴입력 모드에서 점수 조절 핸들러 - 더블파까지만 입력 가능
   const handleScoreAdjust = (adjustment) => {
-    const currentScore = formData.scores[currentHole - 1].score || formData.scores[currentHole - 1].par;
-    const newScore = Math.max(1, currentScore + adjustment);
+    const currentPar = formData.scores[currentHole - 1].par;
+    const currentScore = formData.scores[currentHole - 1].score || currentPar;
+    
+    // 더블파(par * 2) 까지만 입력 가능
+    const maxScore = currentPar * 2;
+    
+    // 새 점수 계산 - 최소 1, 최대 더블파
+    const newScore = Math.min(maxScore, Math.max(1, currentScore + adjustment));
+    
+    // 점수가 더블파에 도달하면 알림 표시
+    if (newScore === maxScore && currentScore < maxScore && adjustment > 0) {
+      alert('더블파까지만 입력 가능합니다.');
+    }
+    
     handleScoreChange(currentHole - 1, 'score', newScore);
   };
   
@@ -274,11 +580,42 @@ export default function NewRound() {
                     ) : (
                       courses.map(course => (
                         <option key={course.id} value={course.id}>
-                          {course.name} ({course.location})
+                          {course.name}{course.location ? ` (${course.location})` : ''}
                         </option>
                       ))
                     )}
                   </select>
+                </div>
+                
+                {/* 코스 이름 체크박스 선택 (C코스, D코스, E코스 등) */}
+                <div className="col-span-1 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2 font-ubuntu-mono">
+                    Course Name
+                  </label>
+                  {courseNames.length > 0 ? (
+                    <div className="flex flex-wrap gap-4">
+                      {courseNames.map(name => (
+                        <div key={name} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`course_name_${name}`}
+                            name="course_name_checkbox"
+                            value={name}
+                            checked={selectedCourseNames.includes(name)}
+                            onChange={handleInputChange}
+                            className="mr-2 h-4 w-4 text-green-500 focus:ring-green-500 border-gray-600 rounded bg-gray-700"
+                          />
+                          <label htmlFor={`course_name_${name}`} className="text-white">
+                            {name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400 italic">
+                      {formData.course_id ? '코스 이름 정보가 없습니다.' : '코스를 먼저 선택해주세요.'}
+                    </div>
+                  )}
                 </div>
                 
                 {/* 날짜 선택 */}
@@ -353,7 +690,35 @@ export default function NewRound() {
                 <div className="space-y-4">
                   {/* 홀 선택 그리드 */}
                   <div className="mb-4">
-                    <h3 className="text-lg font-medium text-white mb-2 font-ubuntu-mono">Select Hole</h3>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-lg font-medium text-white font-ubuntu-mono">Select Hole</h3>
+                      {dataLoaded && (
+                        <div className="flex items-center">
+                          <span className="inline-block px-2 py-1 bg-green-600 text-white text-xs rounded-md mr-2">
+                            Data On
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* 홀 정보 표시 - 코스명, 홀명, 핸디캡 */}
+                    {dataLoaded && courseHolesData && (
+                      <div className="mb-2 text-sm">
+                        {(() => {
+                          const currentHoleInfo = courseHolesData.holes.find(h => h.hole_number === currentHole);
+                          return currentHoleInfo ? (
+                            <div className="flex items-center justify-between text-gray-300">
+                              <span><span className="text-green-400">{courseHolesData.courseName}</span></span>
+                              <span>{currentHoleInfo.hole_name || `Hole ${currentHole}`}</span>
+                              <span>Hdcp: <span className="text-yellow-400">{currentHoleInfo.handicap || 'N/A'}</span></span>
+                            </div>
+                          ) : (
+                            <div className="text-gray-400 text-center">No data for Hole {currentHole}</div>
+                          );
+                        })()} 
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-6 gap-2">
                       {Array.from({ length: 18 }, (_, i) => i + 1).map(hole => (
                         <button

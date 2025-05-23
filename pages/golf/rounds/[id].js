@@ -18,57 +18,92 @@ export default function RoundDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // 라운드 데이터 가져오기
+  // Only execute on client-side
+  const [isClient, setIsClient] = useState(false);
+  
   useEffect(() => {
-    if (!id) return;
+    setIsClient(true);
+  }, []);
+  
+  // Fetch round data
+  useEffect(() => {
+    if (!id || !isClient) return;
     
     const fetchRoundData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/golf/rounds/${id}`);
+        // Get user information from local storage
+        const savedUserData = localStorage.getItem('selectedGolfUser');
+        if (!savedUserData) {
+          // If no saved user information, redirect to rounds list page
+          router.push('/golf/rounds');
+          return;
+        }
+        
+        const savedUser = JSON.parse(savedUserData);
+        
+        // Include user ID as a query parameter in API call
+        const response = await fetch(`/api/golf/rounds/${id}?user_id=${savedUser.id}`);
         
         if (!response.ok) {
-          throw new Error('라운드 데이터를 가져오는데 실패했습니다');
+          throw new Error('Failed to fetch round data');
         }
         
         const data = await response.json();
-        setRound(data.data);
         
-        // 수정을 위한 스코어 데이터 초기화
-        if (data.data && data.data.scores) {
-          setEditedScores(data.data.scores.map(score => ({ ...score })));
+        // Process round data
+        const roundData = data.data;
+        
+        // Set default par values for hole scores if missing
+        if (roundData && roundData.scores) {
+          roundData.scores = roundData.scores.map(score => ({
+            ...score,
+            par: score.par || (score.hole_number % 3 === 0 ? 3 : (score.hole_number % 3 === 1 ? 4 : 5)) // Default par values (3, 4, 5 pattern)
+          }));
+        }
+        
+        setRound(roundData);
+        
+        // Initialize score data for editing
+        if (roundData && roundData.scores) {
+          setEditedScores(roundData.scores.map(score => ({ ...score })));
         }
         
         setError(null);
       } catch (err) {
         console.error('Error fetching round data:', err);
-        setError(err.message || '라운드 데이터를 가져오는데 실패했습니다');
+        setError(err.message || 'Failed to fetch round data');
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchRoundData();
-  }, [id]);
+  }, [id, isClient, router]);
   
-  // 홀 스코어 수정 핸들러
+  // Hole score edit handler
   const handleScoreChange = (holeNumber, field, value) => {
     setEditedScores(prev => 
       prev.map(score => {
         if (score.hole_number === holeNumber) {
           const updatedScore = { ...score };
           
-          // 파 값이 변경되면 타수 기본값도 자동으로 업데이트
+          // Set fairway hit, green in regulation, and sand save values to null
+          updatedScore.fairway_hit = null;
+          updatedScore.green_in_regulation = null;
+          updatedScore.sand_save = null;
+          
+          // If par value changes, automatically update the default score value
           if (field === 'par') {
             const parValue = parseInt(value, 10);
             updatedScore.par = parValue;
             
-            // 타수가 설정되지 않았거나 수정 중이면 파 값으로 초기화
+            // If score is not set or being edited, initialize with par value
             if (!updatedScore.score) {
               updatedScore.score = parValue;
             }
           } else {
-            // 다른 필드 처리
+            // Process other fields
             if (field === 'score') {
               updatedScore[field] = parseInt(value, 10);
             } else {
@@ -83,26 +118,26 @@ export default function RoundDetail() {
     );
   };
   
-  // 수정 모드 토글
+  // Toggle edit mode
   const toggleEditMode = () => {
     if (isEditing) {
-      // 수정 모드 종료 시 원래 데이터로 복원
+      // When exiting edit mode, restore original data
       setEditedScores(round.scores.map(score => ({ ...score })));
     } else {
-      // 수정 모드 시작 시 모든 홀에 대한 데이터 생성
+      // When starting edit mode, create data for all holes
       const existingScores = round.scores || [];
       const newScores = [];
       
-      // 1~18홀까지 데이터 준비
+      // Prepare data for holes 1-18
       for (let i = 1; i <= 18; i++) {
         const existingScore = existingScores.find(s => s.hole_number === i);
         
         if (existingScore) {
-          // 기존 데이터가 있는 경우
+          // If existing data is available
           newScores.push({ ...existingScore });
         } else {
-          // 새로운 홀 데이터 생성
-          const defaultPar = i % 3 === 0 ? 3 : (i % 3 === 1 ? 4 : 5); // 기본 파값 배정 (3, 4, 5 반복)
+          // Create new hole data
+          const defaultPar = i % 3 === 0 ? 3 : (i % 3 === 1 ? 4 : 5); // Default par values (3, 4, 5 pattern)
           newScores.push({
             hole_number: i,
             round_id: round.id,
@@ -122,7 +157,7 @@ export default function RoundDetail() {
     setIsEditing(!isEditing);
   };
   
-  // 수정사항 저장
+  // Save edits
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -138,24 +173,46 @@ export default function RoundDetail() {
       });
       
       if (!response.ok) {
-        throw new Error('라운드 데이터 저장에 실패했습니다');
+        throw new Error('Failed to save round data');
       }
       
       const data = await response.json();
-      setRound(data.data);
+      
+      // Process response data
+      if (data.data) {
+        // Process round data
+        const roundData = data.data;
+        
+        // Set default par values for hole scores if missing
+        if (roundData && roundData.scores) {
+          roundData.scores = roundData.scores.map(score => ({
+            ...score,
+            par: score.par || getDefaultPar(score.hole_number)
+          }));
+        }
+        
+        // Update round data
+        setRound(roundData);
+        
+        // Initialize score data for editing
+        if (roundData.scores) {
+          setEditedScores(roundData.scores.map(score => ({ ...score })));
+        }
+      }
+      
       setIsEditing(false);
-      alert('라운드 데이터가 성공적으로 저장되었습니다!');
+      alert('Round data has been successfully saved!');
     } catch (err) {
       console.error('Error saving round data:', err);
-      alert(`라운드 데이터 저장 중 오류가 발생했습니다: ${err.message}`);
+      alert(`Error saving round data: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
   };
   
-  // 라운드 삭제
+  // Delete round
   const handleDelete = async () => {
-    if (!window.confirm('정말로 이 라운드 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+    if (!window.confirm('Are you sure you want to delete this round record? This action cannot be undone.')) {
       return;
     }
     
@@ -166,34 +223,40 @@ export default function RoundDetail() {
       });
       
       if (!response.ok) {
-        throw new Error('라운드 삭제에 실패했습니다');
+        throw new Error('Failed to delete round');
       }
       
-      alert('라운드가 성공적으로 삭제되었습니다!');
+      alert('Round has been successfully deleted!');
       router.push('/golf/rounds');
     } catch (err) {
       console.error('Error deleting round:', err);
-      alert(`라운드 삭제 중 오류가 발생했습니다: ${err.message}`);
+      alert(`Error deleting round: ${err.message}`);
     } finally {
       setIsDeleting(false);
     }
   };
   
-  // 파 대비 스코어 계산 (색상 표시용)
+  // Return default par value based on hole number
+  const getDefaultPar = (holeNumber) => {
+    // Repeat 3, 4, 5 based on hole number
+    return holeNumber % 3 === 0 ? 3 : (holeNumber % 3 === 1 ? 4 : 5);
+  };
+  
+  // Calculate score relative to par (for color display)
   const getScoreClass = (par, score) => {
-    // 파 값이 없으면 기본값 4로 설정
-    const parValue = par || 4;
+    // Set default value if par is missing
+    const parValue = par || getDefaultPar(score?.hole_number || 1);
     if (!score) return 'text-white';
     
     const diff = score - parValue;
-    if (diff < 0) return 'text-red-400'; // 언더파
-    if (diff === 0) return 'text-white'; // 파
-    return 'text-blue-400'; // 오버파
+    if (diff < 0) return 'text-blue-400'; // Under par (birdie or better)
+    if (diff === 0) return 'text-white'; // Par
+    return 'text-red-400'; // Over par (bogey or worse)
   };
   
-  // 파 대비 스코어 텍스트 표시
+  // Display score relative to par as text
   const getScoreText = (par, score) => {
-    // 파 값이 없으면 기본값 4로 설정
+    // Set default value to 4 if par is missing
     const parValue = par || 4;
     if (!score) return '';
     
@@ -205,97 +268,116 @@ export default function RoundDetail() {
     if (diff === 1) return 'Bogey';
     if (diff === 2) return 'Double Bogey';
     if (diff === 3) return 'Triple Bogey';
+    
+    // 더블파 이상은 'Double Par'로 표시
+    if (score >= parValue * 2) return 'Double Par';
+    
+    // 트리플 보기와 더블파 사이의 점수
     if (diff > 3) return `+${diff}`;
+    
     return '';
   };
   
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
-        <title>라운드 상세 | Sveltt Golf</title>
+        <title>Round Details | Sveltt Golf</title>
         <meta name="description" content="Golf round details" />
       </Head>
 
       <Navbar />
 
       <main className="container mx-auto px-4 py-8">
-        {/* 헤더 */}
+        {/* Header */}
         <div className="mb-8">
-          <Link href="/golf/rounds" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
-            &larr; 라운드 목록으로
+          <Link href="/golf/rounds" className="text-green-400 hover:text-green-300 mb-4 inline-block ">
+            &larr; Back to Round List
           </Link>
           
-          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 font-ubuntu-mono">
-            라운드 상세 정보
+          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 ">
+            Round Details
           </h1>
         </div>
 
-        {/* 로딩 상태 */}
+        {/* Loading state */}
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-300 font-ubuntu-mono">라운드 정보를 불러오는 중...</p>
+            <p className="text-gray-300 ">Loading round information...</p>
           </div>
         )}
         
-        {/* 에러 메시지 */}
+        {/* Error message */}
         {error && !isLoading && (
           <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 mb-6 text-center">
             <p className="text-red-400">{error}</p>
           </div>
         )}
         
-        {/* 라운드 정보 */}
+        {/* Round information */}
         {round && !isLoading && !error && (
           <div className="space-y-8">
-            {/* 라운드 요약 정보 */}
+            {/* Round summary information */}
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div>
-                  <h4 className="text-sm text-gray-400 font-ubuntu-mono">날짜</h4>
+                  <h4 className="text-sm text-gray-400 ">Date</h4>
                   <p className="text-white font-medium">
-                    {new Date(round.play_date).toLocaleDateString('ko-KR')}
+                    {new Date(round.play_date).toLocaleDateString('en-US')}
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-gray-400 font-ubuntu-mono">코스명</h4>
+                  <h4 className="text-sm text-gray-400 ">Course</h4>
                   <p className="text-white font-medium">{round.course_name}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-gray-400 font-ubuntu-mono">지역</h4>
+                  <h4 className="text-sm text-gray-400 ">Location</h4>
                   <p className="text-white font-medium">{round.course_location}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-gray-400 font-ubuntu-mono">합산 타수</h4>
+                  <h4 className="text-sm text-gray-400 ">Total Score</h4>
                   <p className="text-green-400 font-medium text-xl">{round.total_score}</p>
                 </div>
               </div>
               
-              {/* 추가 정보 */}
+              {/* Additional information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 <div>
-                  <h4 className="text-sm text-gray-400 font-ubuntu-mono">날씨</h4>
-                  <p className="text-white">{round.weather || '정보 없음'}</p>
+                  <h4 className="text-sm text-gray-400 ">Weather</h4>
+                  <p className="text-white">{round.weather || 'No information'}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-gray-400 font-ubuntu-mono">메모</h4>
-                  <p className="text-white">{round.notes || '메모 없음'}</p>
+                  <h4 className="text-sm text-gray-400 ">Notes</h4>
+                  <p className="text-white">{round.notes || 'No notes'}</p>
                 </div>
+              </div>
+              
+              {/* Data 버튼 추가 - 홀별 정보가 있는 코스의 경우 */}
+              <div className="mt-4 flex justify-end">
+                {round.scores && round.scores.some(score => score.course_name) && (
+                  <button
+                    type="button"
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md"
+                    onClick={() => alert('코스 홀 정보가 있습니다!')}
+                  >
+                    Data
+                  </button>
+                )}
               </div>
             </div>
             
             {/* 홀별 스코어 테이블 */}
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-green-400 font-ubuntu-mono">홀별 스코어</h2>
+                <h2 className="text-xl font-semibold text-green-400 ">Hole Scores</h2>
                 <div className="space-x-2">
                   <button
                     type="button"
                     onClick={toggleEditMode}
                     disabled={isSaving || isDeleting}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-ubuntu-mono"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                   >
-                    {isEditing ? '취소' : '수정'}
+                    {isEditing ? 'Cancel' : 'Edit'}
                   </button>
                   
                   {isEditing && (
@@ -303,9 +385,9 @@ export default function RoundDetail() {
                       type="button"
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-ubuntu-mono"
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
                     >
-                      {isSaving ? '저장 중...' : '저장'}
+                      {isSaving ? 'Saving...' : 'Save'}
                     </button>
                   )}
                   
@@ -313,9 +395,9 @@ export default function RoundDetail() {
                     type="button"
                     onClick={handleDelete}
                     disabled={isEditing || isSaving || isDeleting}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-ubuntu-mono"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
                   >
-                    {isDeleting ? '삭제 중...' : '삭제'}
+                    {isDeleting ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>
@@ -324,11 +406,11 @@ export default function RoundDetail() {
                 <table className="min-w-full bg-gray-900 rounded-lg overflow-hidden">
                   <thead>
                     <tr className="bg-gray-800 text-gray-300 text-sm">
-                      <th className="py-3 px-4 text-left">홀</th>
-                      <th className="py-3 px-4 text-center">파</th>
-                      <th className="py-3 px-4 text-center">타수</th>
-                      <th className="py-3 px-4 text-center">결과</th>
-                      <th className="py-3 px-4 text-center">퍼팅</th>
+                      <th className="py-3 px-4 text-left">Hole</th>
+                      <th className="py-3 px-4 text-center">Course Name</th>
+                      <th className="py-3 px-4 text-center">Par</th>
+                      <th className="py-3 px-4 text-center">Score</th>
+                      <th className="py-3 px-4 text-center">Putts</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -337,26 +419,32 @@ export default function RoundDetail() {
                       const holeScore = round.scores?.find(score => score.hole_number === holeNumber);
                       const editedScore = editedScores?.find(score => score.hole_number === holeNumber);
                       
+                      // 수정 모드에서는 모든 홀에 대한 입력 필드 표시
+                      const score = isEditing ? editedScore : holeScore;
+                      
                       // 홀 스코어가 없으면 빈 행 표시 (수정 모드에서는 모든 홀 표시)
                       if (!holeScore && !isEditing) {
                         return (
                           <tr key={holeNumber} className="border-t border-gray-800 text-gray-500">
                             <td className="py-3 px-4 text-left font-medium">{holeNumber}</td>
-                            <td className="py-3 px-4 text-center" colSpan="4">기록 없음</td>
+                            <td className="py-3 px-4 text-center">-</td>
+                            <td className="py-3 px-4 text-center">-</td>
+                            <td className="py-3 px-4 text-center">-</td>
+                            <td className="py-3 px-4 text-center">-</td>
                           </tr>
                         );
                       }
-                      
-                      // 수정 모드에서는 모든 홀에 대한 입력 필드 표시
-                      const score = isEditing ? editedScore : holeScore;
                       
                       return (
                         <tr key={holeNumber} className="border-t border-gray-800">
                           <td className="py-3 px-4 text-left font-medium">{holeNumber}</td>
                           <td className="py-3 px-4 text-center">
+                            {score?.course_name || `홀 ${holeNumber}`}
+                          </td>
+                          <td className="py-3 px-4 text-center">
                             {isEditing ? (
                               <select
-                                value={score?.par || 4}
+                                value={score?.par || getDefaultPar(holeNumber)}
                                 onChange={(e) => handleScoreChange(holeNumber, 'par', e.target.value)}
                                 className="bg-gray-700 text-white border border-gray-600 rounded-md px-2 py-1 w-16 text-center"
                               >
@@ -365,7 +453,7 @@ export default function RoundDetail() {
                                 <option value={5}>5</option>
                               </select>
                             ) : (
-                              score?.par || '-'
+                              score?.par || getDefaultPar(holeNumber)
                             )}
                           </td>
                           <td className="py-3 px-4 text-center">
@@ -379,14 +467,9 @@ export default function RoundDetail() {
                               />
                             ) : (
                               <span className={getScoreClass(score?.par, score?.score)}>
-                                {score?.score || '-'}
+                                {getScoreText(score?.par, score?.score)}
                               </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={getScoreClass(score?.par, score?.score)}>
-                              {getScoreText(score?.par, score?.score)}
-                            </span>
+                            )}                          
                           </td>
                           <td className="py-3 px-4 text-center">
                             {isEditing ? (
@@ -401,7 +484,6 @@ export default function RoundDetail() {
                               score?.putts !== null ? score?.putts : '-'
                             )}
                           </td>
-
                         </tr>
                       );
                     })}

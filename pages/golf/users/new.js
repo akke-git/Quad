@@ -120,16 +120,16 @@ export default function NewUser() {
         {/* 헤더 */}
         <div className="mb-8">
           {isClient ? (
-            <Link href="/golf/users/users" className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
+            <Link href="/golf/users/users" className="text-green-400 hover:text-green-300 mb-4 inline-block">
               &larr; back user list
             </Link>
           ) : (
-            <span className="text-green-400 hover:text-green-300 mb-4 inline-block font-ubuntu-mono">
+            <span className="text-green-400 hover:text-green-300 mb-4 inline-block">
               &larr; back user list
             </span>
           )}
           
-          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6 font-ubuntu-mono" suppressHydrationWarning>
+          <h1 className="text-3xl font-bold text-green-400 mt-4 mb-6" suppressHydrationWarning>
             User Registration
           </h1>
         </div>
