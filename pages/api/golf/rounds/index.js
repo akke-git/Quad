@@ -7,41 +7,122 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const userId = req.query.user_id;
+      const limit = req.query.limit || 100; // 기본 제한 설정
       
-      let query = `
-        SELECT r.*, c.name as course_name, c.location as course_location 
+      console.log('Fetching rounds for user:', userId);
+      
+      // 라운드 데이터와 코스 정보를 함께 가져오기 (LEFT JOIN 사용)
+      let roundsQuery = `
+        SELECT r.*, gc.name as course_name, gc.region as course_location 
         FROM rounds r
-        JOIN golf_courses c ON r.course_id = c.id
+        LEFT JOIN golf_courses gc ON r.course_id = gc.id
       `;
       
       const params = [];
       
       // 사용자 ID로 필터링
       if (userId) {
-        query += ' WHERE r.user_id = ?';
+        roundsQuery += ' WHERE user_id = ?';
         params.push(userId);
       }
       
-      query += ' ORDER BY r.play_date DESC';
+      roundsQuery += ' ORDER BY play_date DESC';
+      roundsQuery += ' LIMIT ?';
+      params.push(parseInt(limit));
       
-      const rounds = await golfQuery(query, params);
+      console.log('Rounds query:', roundsQuery, 'Params:', params);
+      const rounds = await golfQuery(roundsQuery, params);
+      console.log('Found rounds:', rounds.length);
       
       // 각 라운드의 홀 스코어 데이터 가져오기
       const roundsWithScores = [];
       
       for (const round of rounds) {
-        const scoresQuery = `
-          SELECT * FROM hole_scores 
-          WHERE round_id = ? 
-          ORDER BY hole_number
-        `;
+        console.log('Processing round:', round.id, 'with course_id:', round.course_id);
         
-        const scores = await golfQuery(scoresQuery, [round.id]);
+        // 코스 정보 가져오기
+        let courseInfo = null;
+        let courseName = '[미확인]';
+        let courseLocation = '지역 정보 없음';
+        
+        if (round.course_id) {
+          try {
+            console.log('Fetching course info for course_id:', round.course_id);
+            
+            // golf_courses 테이블에서 조회
+            const golfCoursesQuery = `
+              SELECT * FROM golf_courses 
+              WHERE id = ?
+            `;
+            let golfCourseResults = await golfQuery(golfCoursesQuery, [round.course_id]);
+            console.log('Golf courses query results count:', golfCourseResults.length);
+            
+            if (golfCourseResults && golfCourseResults.length > 0) {
+              courseInfo = golfCourseResults[0];
+              console.log('Found course in golf_courses:', courseInfo.name);
+            } else {
+              // courses 테이블에서 조회
+              console.log('No results in golf_courses, trying courses table');
+              const coursesQuery = `
+                SELECT * FROM courses 
+                WHERE id = ?
+              `;
+              let coursesResults = await golfQuery(coursesQuery, [round.course_id]);
+              console.log('Courses query results count:', coursesResults.length);
+              
+              if (coursesResults && coursesResults.length > 0) {
+                courseInfo = coursesResults[0];
+                console.log('Found course in courses:', courseInfo.name);
+              } else {
+                console.log('No course found with id:', round.course_id);
+              }
+            }
+            
+            // 코스 정보가 있으면 이름과 지역 정보 설정
+            if (courseInfo) {
+              courseName = courseInfo.name || '알 수 없는 코스';
+              courseLocation = courseInfo.region || courseInfo.location || '지역 정보 없음';
+              console.log('Setting course name:', courseName, 'and location:', courseLocation);
+            }
+          } catch (courseError) {
+            console.error('Error fetching course info:', courseError);
+          }
+        } else {
+          console.log('Round has no course_id');
+        }
+        
+        // 홀 스코어 가져오기
+        let scores = [];
+        try {
+          const scoresQuery = `
+            SELECT * FROM hole_scores 
+            WHERE round_id = ? 
+            ORDER BY hole_number
+          `;
+          
+          scores = await golfQuery(scoresQuery, [round.id]);
+        } catch (scoreError) {
+          console.error('Error fetching hole scores:', scoreError);
+        }
+        
+        // 이미 JOIN으로 가져온 코스 정보가 있으면 그대로 사용하고, 없으면 추가 조회한 정보 사용
+        let finalCourseName = round.course_name || courseName;
+        const finalCourseLocation = round.course_location || courseLocation;
+        
+        // 코스명이 비어있거나 공백만 있는 경우 처리
+        if (!finalCourseName || finalCourseName.trim() === '') {
+          finalCourseName = '[미확인]';
+          console.log(`비어있는 코스명을 '[미확인]'으로 설정`);
+        }
         
         roundsWithScores.push({
           ...round,
+          course_name: finalCourseName,
+          course_location: finalCourseLocation,
           scores: scores
         });
+        
+        console.log('Added round with course_name:', finalCourseName);
       }
       
       return res.status(200).json({
@@ -52,7 +133,7 @@ export default async function handler(req, res) {
       console.error('Error fetching rounds:', error);
       return res.status(500).json({
         status: 'error',
-        message: 'Failed to fetch rounds'
+        message: `라운드 목록을 가져오는데 실패했습니다: ${error.message}`
       });
     }
   }
@@ -99,24 +180,24 @@ export default async function handler(req, res) {
           `INSERT INTO hole_scores (
             round_id, 
             hole_number, 
-            par,
             score, 
             putts, 
             fairway_hit, 
             green_in_regulation, 
             sand_save, 
-            penalty_strokes
+            penalty_strokes,
+            course_name
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             round_id,
             holeScore.hole_number,
-            holeScore.par || 4,
             holeScore.score,
             holeScore.putts || null,
             holeScore.fairway_hit || null,
             holeScore.green_in_regulation || null,
             holeScore.sand_save || null,
-            holeScore.penalty_strokes || 0
+            holeScore.penalty_strokes || 0,
+            holeScore.course_name || null
           ]
         );
       }

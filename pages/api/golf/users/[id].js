@@ -97,67 +97,94 @@ export default async function handler(req, res) {
         
         // Process profile image if uploaded
         let profileImagePath = existingUser.profile_image;
-        if (files.profile_image) {
-          const file = files.profile_image;
+        if (files && files.profile_image) {
+          // 파일 객체 처리 (배열 또는 단일 객체)
+          const fileObj = files.profile_image;
+          const file = Array.isArray(fileObj) ? fileObj[0] : fileObj;
           
           // 디버깅을 위해 파일 객체 속성 출력
           console.log('File object properties:', Object.keys(file));
           console.log('File filepath:', file.filepath);
           
-          // 간단한 방법으로 파일 처리
-          // 파일 이름에서 확장자를 추출하지 않고 고정 확장자 사용
-          const fileName = `user_${Date.now()}.jpg`;
-          const newPath = path.join(process.cwd(), 'public/uploads/profiles', fileName);
-          
-          try {
-            // 파일 복사
-            fs.copyFileSync(file.filepath, newPath);
-            profileImagePath = `/uploads/profiles/${fileName}`;
-            console.log('File copied successfully to:', newPath);
-          } catch (err) {
-            console.error('Error copying file:', err);
-          }
-          
-          // Delete old profile image if it exists
-          if (existingUser.profile_image) {
-            const oldImagePath = path.join(process.cwd(), 'public', existingUser.profile_image);
-            if (fs.existsSync(oldImagePath)) {
-              fs.unlinkSync(oldImagePath);
+          if (file && file.filepath) {
+            // 파일 확장자 추출
+            const originalExt = path.extname(file.originalFilename || file.filepath) || '.jpg';
+            const fileName = `user_${id}_${Date.now()}${originalExt}`;
+            const newPath = path.join(process.cwd(), 'public/uploads/profiles', fileName);
+            
+            try {
+              // 파일 복사
+              fs.copyFileSync(file.filepath, newPath);
+              profileImagePath = `/uploads/profiles/${fileName}`;
+              console.log('File copied successfully to:', newPath);
+              console.log('Profile image path set to:', profileImagePath);
+              
+              // Delete old profile image if it exists and is different
+              if (existingUser.profile_image && existingUser.profile_image !== profileImagePath) {
+                const oldImagePath = path.join(process.cwd(), 'public', existingUser.profile_image);
+                if (fs.existsSync(oldImagePath)) {
+                  try {
+                    fs.unlinkSync(oldImagePath);
+                    console.log('Old profile image deleted:', oldImagePath);
+                  } catch (delErr) {
+                    console.error('Error deleting old profile image:', delErr);
+                  }
+                }
+              }
+            } catch (err) {
+              console.error('Error copying file:', err);
             }
+          } else {
+            console.error('Invalid file object or missing filepath');
           }
+        } else {
+          console.log('No profile image uploaded, keeping existing:', profileImagePath);
         }
         
+        // 필드 값 정규화 (배열 처리)
+        const normalizedFields = {
+          username: Array.isArray(fields.username) ? fields.username[0] : fields.username,
+          email: Array.isArray(fields.email) ? fields.email[0] : fields.email,
+          display_name: Array.isArray(fields.display_name) ? fields.display_name[0] : fields.display_name,
+          handicap: Array.isArray(fields.handicap) ? fields.handicap[0] : fields.handicap,
+          password: fields.password ? (Array.isArray(fields.password) ? fields.password[0] : fields.password) : null
+        };
+        
+        console.log('Updating user with profile_image:', profileImagePath);
+        
         // Update user
-        await golfQuery(
+        const updateResult = await golfQuery(
           `UPDATE users SET 
            username = ?, 
            email = ?, 
            display_name = ?, 
            handicap = ?,
            profile_image = ?,
-           ${fields.password ? 'password = ?,' : ''}
+           ${normalizedFields.password ? 'password = ?,' : ''}
            updated_at = NOW()
            WHERE id = ?`,
           [
-            fields.username || existingUser.username,
-            fields.email || existingUser.email,
-            fields.display_name || existingUser.display_name,
-            fields.handicap || existingUser.handicap,
+            normalizedFields.username || existingUser.username,
+            normalizedFields.email || existingUser.email,
+            normalizedFields.display_name || existingUser.display_name,
+            normalizedFields.handicap || existingUser.handicap,
             profileImagePath,
-            ...(fields.password ? [fields.password] : []),
+            ...(normalizedFields.password ? [normalizedFields.password] : []),
             id
           ]
         );
+        
+        console.log('Update result:', updateResult);
         
         res.status(200).json({ 
           success: true, 
           message: 'User updated successfully',
           data: {
             id: parseInt(id),
-            username: fields.username || existingUser.username,
-            email: fields.email || existingUser.email,
-            display_name: fields.display_name || existingUser.display_name,
-            handicap: fields.handicap || existingUser.handicap,
+            username: normalizedFields.username || existingUser.username,
+            email: normalizedFields.email || existingUser.email,
+            display_name: normalizedFields.display_name || existingUser.display_name,
+            handicap: normalizedFields.handicap || existingUser.handicap,
             profile_image: profileImagePath
           }
         });

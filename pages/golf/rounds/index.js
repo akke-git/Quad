@@ -177,7 +177,7 @@ export default function RoundRecords() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-300 font-ubuntu-mono">Loading users...</p>
+            <p className="text-gray-300">Loading users...</p>
           </div>
         )}
         
@@ -195,9 +195,9 @@ export default function RoundRecords() {
             
             {users.length === 0 ? (
               <div className="text-center py-8 bg-gray-800 rounded-lg border border-gray-700">
-                <p className="text-gray-300 font-ubuntu-mono">No users found.</p>
+                <p className="text-gray-300">No users found.</p>
                 <Link href="/golf/users/new">
-                  <button className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 font-ubuntu-mono">
+                  <button className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
                     Create New User
                   </button>
                 </Link>
@@ -209,7 +209,7 @@ export default function RoundRecords() {
                     <div 
                       key={user.id}
                       onClick={() => handleUserSelect(user)}
-                      className={`bg-gray-800 rounded-lg p-4 border border-gray-700 hover:bg-gray-700 transition-colors duration-300 cursor-pointer w-40 flex flex-col items-center ${selectedUser?.id === user.id ? 'ring-2 ring-green-500' : ''}`}
+                      className={`rounded-lg transition-all duration-300 cursor-pointer flex flex-col items-center ${selectedUser?.id === user.id ? 'w-40 p-3 mt-1 mb-1 mx-1 bg-gray-800 border-4 border-yellow-400 shadow-lg z-10' : 'w-40 p-4 bg-gray-800 border border-gray-700 hover:bg-gray-700'}`}
                     >
                       {/* 프로필 이미지 */}
                       <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-700 mb-3">
@@ -245,7 +245,7 @@ export default function RoundRecords() {
         {showPasswordModal && selectedUser && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full border border-gray-700">
-              <h2 className="text-xl font-semibold text-green-400 mb-4 font-ubuntu-mono">
+              <h2 className="text-xl font-semibold text-green-400 mb-4">
                 Authentication Required
               </h2>
               
@@ -286,7 +286,7 @@ export default function RoundRecords() {
               {/* 비밀번호 입력 폼 */}
               <form onSubmit={handleAuthenticate}>
                 <div className="mb-4">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2 font-ubuntu-mono">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                     Password
                   </label>
                   <input
@@ -304,14 +304,14 @@ export default function RoundRecords() {
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md font-ubuntu-mono"
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isAuthenticating}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-ubuntu-mono"
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
                   >
                     {isAuthenticating ? 'Verifying...' : 'Verify'}
                   </button>
@@ -342,19 +342,19 @@ export default function RoundRecords() {
               
               {/* 사용자 정보 */}
               <div>
-                <h3 className="font-semibold text-white text-xl font-ubuntu-mono">
-                  {selectedUser.display_name || selectedUser.username}의 라운드
+                <h3 className="font-semibold text-white text-xl">
+                  {selectedUser.display_name || selectedUser.username}
                 </h3>
                 <p className="text-gray-400 text-sm">
-                  핸디캡: {selectedUser.handicap || 'N/A'}
+                  Handicap: {selectedUser.handicap || 'N/A'}
                 </p>
               </div>
               
               {/* 새 라운드 기록 버튼 */}
               <div className="ml-auto">
                 <Link href={`/golf/rounds/new?user=${selectedUser.id}`}>
-                  <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300 font-ubuntu-mono">
-                    새 라운드
+                  <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
+                    New
                   </button>
                 </Link>
               </div>
@@ -364,11 +364,11 @@ export default function RoundRecords() {
             {loadingRounds ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-                <p className="text-gray-300 font-ubuntu-mono">라운드 기록을 불러오는 중...</p>
+                <p className="text-gray-300">라운드 기록을 불러오는 중...</p>
               </div>
             ) : rounds.length === 0 ? (
               <div className="text-center py-8 text-gray-300">
-                <p className="font-ubuntu-mono">라운드 기록이 없습니다.</p>
+                <p>라운드 기록이 없습니다.</p>
               </div>
             ) : (
               <div className="space-y-8">
@@ -379,39 +379,35 @@ export default function RoundRecords() {
                       {/* 코스명과 합산 타수 - 크게 강조 */}
                       <div className="flex justify-between items-center mb-3">
                         <div>
-                          <h4 className="text-sm text-gray-400 font-ubuntu-mono">course</h4>
-                          <p className="text-white font-bold text-xl font-ubuntu-mono">{round.course_name}</p>
+                          <h4 className="text-sm text-gray-400">course</h4>
+                          <p className="text-white font-bold text-xl">{round.course_name}</p>
                         </div>
                         <div className="text-right">
-                          <h4 className="text-sm text-gray-400 font-ubuntu-mono">Score</h4>
-                          <p className="text-green-400 font-bold text-5xl font-ubuntu-mono">{round.total_score}</p>
+                          <h4 className="text-sm text-gray-400">Score</h4>
+                          <p className="text-green-400 font-bold text-5xl">{round.total_score}</p>
                         </div>
                       </div>
                       
-                      {/* 날짜와 지역 - 작게 2열로 */}
-                      <div className="grid grid-cols-2 gap-2">
+                      {/* 날짜, 지역, 상세보기 버튼 - 3열로 배치하여 높이 줄이기 */}
+                      <div className="grid grid-cols-3 gap-2">
                         <div>
-                          <h4 className="text-xs text-gray-400 font-ubuntu-mono">날짜</h4>
+                          <h4 className="text-xs text-gray-400">날짜</h4>
                           <p className="text-gray-300 text-sm">
                             {new Date(round.play_date).toLocaleDateString('ko-KR')}
                           </p>
                         </div>
                         <div>
-                          <h4 className="text-xs text-gray-400 font-ubuntu-mono">지역</h4>
+                          <h4 className="text-xs text-gray-400">지역</h4>
                           <p className="text-gray-300 text-sm">{round.course_location}</p>
                         </div>
+                        <div className="text-right">
+                          <Link href={`/golf/rounds/${round.id}`}>
+                            <button className="text-green-400 hover:text-green-300 text-sm font-ubuntu-mono mt-4">
+                              Detail/Edit &rarr;
+                            </button>
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                    
-
-                    
-                    {/* 라운드 상세 보기 버튼 */}
-                    <div className="mt-4 text-right">
-                      <Link href={`/golf/rounds/${round.id}`}>
-                        <button className="text-green-400 hover:text-green-300 text-sm font-ubuntu-mono">
-                          상세 보기 &rarr;
-                        </button>
-                      </Link>
                     </div>
                   </div>
                 ))}

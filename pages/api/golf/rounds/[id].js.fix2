@@ -61,9 +61,8 @@ export default async function handler(req, res) {
             fairway_hit, 
             green_in_regulation, 
             sand_save, 
-            penalty_strokes,
-            course_name
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            penalty_strokes
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             id,
             holeScore.hole_number,
@@ -72,8 +71,7 @@ export default async function handler(req, res) {
             holeScore.fairway_hit || null,
             holeScore.green_in_regulation || null,
             holeScore.sand_save || null,
-            holeScore.penalty_strokes || 0,
-            holeScore.course_name || null
+            holeScore.penalty_strokes || 0
           ]
         );
       }
@@ -192,10 +190,8 @@ export default async function handler(req, res) {
         
         return {
           ...score,
-          // 홀 스코어 테이블에 course_name이 있으면 그것을 우선 사용
-          // 없으면 코스 홀 정보에서 가져온 값 사용
           par: courseHoleInfo ? courseHoleInfo.par : null,
-          course_name: score.course_name || (courseHoleInfo ? courseHoleInfo.course_name : null)
+          course_name: courseHoleInfo ? courseHoleInfo.course_name : null
         };
       });
       
@@ -249,9 +245,9 @@ export default async function handler(req, res) {
     }
   }
   
-  // Unsupported HTTP method
+  // 지원하지 않는 HTTP 메서드
   return res.status(405).json({
     status: 'error',
-    message: 'Unsupported method'
+    message: `Method ${req.method} Not Allowed`
   });
 }

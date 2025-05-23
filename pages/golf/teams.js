@@ -3,31 +3,28 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
-import Navbar from '../../../components/Navbar';
+import Navbar from '../../components/Navbar';
 
-export default function Users() {
+export default function Teams() {
   const router = useRouter();
-  const [users, setUsers] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
   // 정렬 상태
-  const [sortBy, setSortBy] = useState('username');
+  const [sortBy, setSortBy] = useState('team_name');
   const [sortOrder, setSortOrder] = useState('asc');
   
   // 정렬 옵션
   const sortOptions = [
-    { value: 'username', label: 'Username' },
-    { value: 'display_name', label: 'Display Name' },
-    { value: 'handicap', label: 'Handicap' },
-    { value: 'created_at', label: 'Created At' }
+    { value: 'team_name', label: '팀 이름' },
+    { value: 'team_created_at', label: '생성일' }
   ];
 
-  // 사용자 데이터 가져오기
+  // 팀 데이터 가져오기
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchTeams = async () => {
       setIsLoading(true);
       try {
         // 쿼리 파라미터 구성
@@ -40,24 +37,24 @@ export default function Users() {
         params.append('limit', '1000');
         
         // API 호출
-        const response = await fetch(`/api/golf/users?${params.toString()}`);
+        const response = await fetch(`/api/golf/teams?${params.toString()}`);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error('팀 목록을 가져오는데 실패했습니다');
         }
         
         const data = await response.json();
-        setUsers(data.data || []);
+        setTeams(data.data || []);
         setError(null);
       } catch (err) {
-        console.error('Error fetching users:', err);
-        setError('Failed to fetch users');
+        console.error('Error fetching teams:', err);
+        setError('팀 목록을 가져오는데 실패했습니다');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchUsers();
+    fetchTeams();
   }, [sortBy, sortOrder]);
   
   // 정렬 변경 핸들러
@@ -73,8 +70,8 @@ export default function Users() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
-        <title>Users Management | Sveltt Golf</title>
-        <meta name="description" content="Golf app user management" />
+        <title>team | Sveltt Golf</title>
+        <meta name="description" content="골프 앱 팀 관리" />
       </Head>
 
       <Navbar />
@@ -83,17 +80,17 @@ export default function Users() {
         {/* 헤더 */}
         <div className="mb-8">
           <Link href="/golf" className="text-green-400 hover:text-green-300 mb-4 inline-block">
-            &larr; Golf Home
+            &larr; Home
           </Link>
           
           <div className="flex justify-between items-center mt-4">
             <h1 className="text-3xl font-bold text-green-400 mb-6">
-              Users Management
+              Team Management
             </h1>
             
-            <Link href="/golf/users/new">
+            <Link href="/golf/teams/new">
               <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
-                New User
+                New
               </button>
             </Link>
           </div>
@@ -104,7 +101,7 @@ export default function Users() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <label htmlFor="sort-by" className="block text-sm font-medium text-gray-300 mb-2">
-                Sort by
+                sort by
               </label>
               <div className="flex">
                 <select
@@ -135,7 +132,7 @@ export default function Users() {
         {isLoading && (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-            <p className="text-gray-300">Loading users...</p>
+            <p className="text-gray-300">팀 목록을 불러오는 중...</p>
           </div>
         )}
         
@@ -146,71 +143,83 @@ export default function Users() {
           </div>
         )}
         
-        {/* 사용자 목록 */}
+        {/* 팀 목록 */}
         {!isLoading && !error && (
           <>
-            {users.length === 0 ? (
+            {teams.length === 0 ? (
               <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
-                <p className="text-gray-300">No users found.</p>
+                <p className="text-gray-300">등록된 팀이 없습니다.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {users.map((user) => (
-                  <div key={user.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:bg-gray-700 transition-colors duration-300 border border-gray-700">
+                {teams.map((team) => (
+                  <div key={team.team_id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md hover:bg-gray-700 transition-colors duration-300 border border-gray-700">
                     <div className="p-4 flex items-center">
-                      {/* 프로필 이미지 */}
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-700 mr-4 flex-shrink-0">
-                        {user.profile_image ? (
-                          <img
-                            src={user.profile_image}
-                            alt={user.display_name || user.username}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl">
-                            👤
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* 사용자 정보 */}
-                      <div className="flex-1">
+                      {/* 팀명 (좌측) */}
+                      <div className="w-1/3 pr-4">
                         <h2 className="text-lg font-semibold text-green-400">
-                          {user.display_name || user.username}
+                          {team.team_name}
                         </h2>
-                        <p className="text-gray-300 text-sm">@{user.username}</p>
-                        <p className="text-gray-400 text-sm mt-1">
-                          Handicap: {user.handicap || 'N/A'}
-                        </p>
                       </div>
                       
-                      {/* 작업 버튼 */}
-                      <div className="ml-2">
-                        <Link href={`/golf/users/${user.id}`}>
-                          <button className="text-green-400 hover:text-green-300 p-1">
-                            Edit
-                          </button>
-                        </Link>
+                      {/* 팀원 정보 (중앙/우측) */}
+                      <div className="w-2/3 flex justify-between items-center">
+                        {/* 첫 번째 팀원 */}
+                        <div className="flex flex-col items-center mr-2">
+                          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 mb-2 flex-shrink-0">
+                            {team.user1_profile_image ? (
+                              <img
+                                src={team.user1_profile_image}
+                                alt={team.user1_display_name || team.user1_username}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl">
+                                👤
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-gray-300 text-sm text-center">
+                            {team.user1_display_name || team.user1_username}
+                          </span>
+                        </div>
+                        
+                        {/* 두 번째 팀원 */}
+                        <div className="flex flex-col items-center">
+                          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 mb-2 flex-shrink-0">
+                            {team.user2_profile_image ? (
+                              <img
+                                src={team.user2_profile_image}
+                                alt={team.user2_display_name || team.user2_username}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl">
+                                👤
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-gray-300 text-sm text-center">
+                            {team.user2_display_name || team.user2_username}
+                          </span>
+                        </div>
+                        
+                        {/* 작업 버튼 */}
+                        <button 
+                          onClick={() => router.push(`/golf/teams/${team.team_id}`)}
+                          className="text-green-400 hover:text-green-300 p-1 ml-2"
+                        >
+                          상세
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-            
-            {/* 결과 수 표시 */}
-            <div className="mt-6 text-right text-gray-400 text-sm">
-              Total {users.length} users
-            </div>
           </>
         )}
       </main>
-
-      <footer className="bg-gray-800 text-gray-300 py-3 border-t border-gray-700 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <p> 2025 Sveltt Golf Score</p>
-        </div>
-      </footer>
     </div>
   );
 }
