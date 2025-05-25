@@ -161,9 +161,9 @@ export default async function handler(req, res) {
         let allSquare = 0;
         
         holeResults.forEach(hole => {
-          if (hole.winner_team === match.team1_id) {
+          if (hole.winner_team === 1) {
             team1Wins++;
-          } else if (hole.winner_team === match.team2_id) {
+          } else if (hole.winner_team === 2) {
             team2Wins++;
           } else {
             allSquare++;
@@ -233,82 +233,6 @@ export default async function handler(req, res) {
           return res.status(400).json({ message: '핸디캡 정보가 누락되었습니다.' });
         }
         
-        // 트랜잭션 시작
-        await query('START TRANSACTION');
-        
-        // 팀 매치 정보 업데이트
-        await query(`
-          UPDATE team_match 
-          SET handicap_team = ?, handicap_amount = ?
-          WHERE team_match_id = ?
-        `, [parseInt(handicap_team), parseInt(handicap_amount), id]);
-        
-        // 홀별 결과 업데이트
-        if (hole_results && hole_results.length > 0) {
-          // 기존 홀 결과 삭제
-          await query(`
-            DELETE FROM team_match_hole
-            WHERE team_match_id = ?
-          `, [id]);
-          
-          // 새로운 홀 결과 삽입
-          const holeInsertPromises = hole_results.map(hole => {
-            return query(`
-              INSERT INTO team_match_hole (team_match_id, hole_number, winner_team)
-              VALUES (?, ?, ?)
-            `, [id, parseInt(hole.hole_number), parseInt(hole.winner_team)]);
-          });
-          
-          await Promise.all(holeInsertPromises);
-          
-          // 홀별 결과에 따라 승리팀 계산
-          const holeResults = await query(`
-            SELECT hole_number, winner_team
-            FROM team_match_hole
-            WHERE team_match_id = ?
-          `, [id]);
-          
-          // 팀 매치 정보 가져오기
-          const teamMatch = await query(`
-            SELECT team1_id, team2_id
-            FROM team_match
-            WHERE team_match_id = ?
-          `, [id]);
-          
-          if (teamMatch.length > 0) {
-            const { team1_id, team2_id } = teamMatch[0];
-            
-            let team1Wins = 0;
-            let team2Wins = 0;
-            let allSquare = 0;
-            
-            holeResults.forEach(hole => {
-              if (hole.winner_team === parseInt(team1_id)) {
-                team1Wins++;
-              } else if (hole.winner_team === parseInt(team2_id)) {
-                team2Wins++;
-              } else {
-                allSquare++;
-              }
-            });
-            
-            // 승리팀 결정
-            let winnerTeam = null;
-            if (team1Wins > team2Wins) {
-              winnerTeam = parseInt(team1_id);
-            } else if (team2Wins > team1Wins) {
-              winnerTeam = parseInt(team2_id);
-            }
-            
-            // winner 업데이트
-            await query(`
-              UPDATE team_match SET winner = ? WHERE team_match_id = ?
-            `, [winnerTeam, id]);
-          }
-        }
-        
-        // 트랜잭션 커밋
-        await query('COMMIT');
         
         res.status(200).json({ 
           id: id,

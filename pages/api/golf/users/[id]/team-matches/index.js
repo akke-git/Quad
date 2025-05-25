@@ -65,7 +65,7 @@ export default async function handler(req, res) {
             
             // 홀 결과 가져오기
             const holes = await query(`
-              SELECT * FROM team_match_holes
+              SELECT * FROM team_match_hole
               WHERE team_match_id = ?
               ORDER BY hole_number
             `, [match.id]);
