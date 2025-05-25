@@ -33,14 +33,14 @@ export default async function handler(req, res) {
         
         // 이미 해당 홀의 결과가 있는지 확인
         const [existingHole] = await query(`
-          SELECT * FROM team_match_holes
+          SELECT * FROM team_match_hole
           WHERE team_match_id = ? AND hole_number = ?
         `, [teamMatchId, holeNum]);
         
         if (existingHole) {
           // 기존 홀 결과 업데이트
           await query(`
-            UPDATE team_match_holes
+            UPDATE team_match_hole
             SET winner_team = ?
             WHERE id = ?
           `, [winner_team, existingHole.id]);
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         } else {
           // 새 홀 결과 추가
           await query(`
-            INSERT INTO team_match_holes (team_match_id, hole_number, winner_team)
+            INSERT INTO team_match_hole (team_match_id, hole_number, winner_team)
             VALUES (?, ?, ?)
           `, [teamMatchId, holeNum, winner_team]);
           
@@ -62,12 +62,12 @@ export default async function handler(req, res) {
         `, [teamMatch.course_id]);
         
         const [holeCount] = await query(`
-          SELECT COUNT(*) as count FROM team_match_holes WHERE team_match_id = ?
+          SELECT COUNT(*) as count FROM team_match_hole WHERE team_match_id = ?
         `, [teamMatchId]);
         
         // 홀별 승리 현황 계산
         const holeResults = await query(`
-          SELECT winner_team FROM team_match_holes WHERE team_match_id = ?
+          SELECT winner_team FROM team_match_hole WHERE team_match_id = ?
         `, [teamMatchId]);
         
         let team1Wins = 0;
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
       try {
         // 홀 결과 삭제
         await query(`
-          DELETE FROM team_match_holes
+          DELETE FROM team_match_hole
           WHERE team_match_id = ? AND hole_number = ?
         `, [teamMatchId, holeNum]);
         

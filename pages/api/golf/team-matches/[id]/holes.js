@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         
         // 홀 결과 가져오기
         const holes = await query(`
-          SELECT * FROM team_match_holes
+          SELECT * FROM team_match_hole
           WHERE team_match_id = ?
           ORDER BY hole_number
         `, [teamMatchId]);
@@ -57,14 +57,14 @@ export default async function handler(req, res) {
         
         // 이미 해당 홀의 결과가 있는지 확인
         const [existingHole] = await query(`
-          SELECT * FROM team_match_holes
+          SELECT * FROM team_match_hole
           WHERE team_match_id = ? AND hole_number = ?
         `, [teamMatchId, hole_number]);
         
         if (existingHole) {
           // 기존 홀 결과 업데이트
           await query(`
-            UPDATE team_match_holes
+            UPDATE team_match_hole
             SET winner_team = ?
             WHERE id = ?
           `, [winner_team, existingHole.id]);
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
         } else {
           // 새 홀 결과 추가
           await query(`
-            INSERT INTO team_match_holes (team_match_id, hole_number, winner_team)
+            INSERT INTO team_match_hole (team_match_id, hole_number, winner_team)
             VALUES (?, ?, ?)
           `, [teamMatchId, hole_number, winner_team]);
           
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         `, [teamMatch.course_id]);
         
         const [holeCount] = await query(`
-          SELECT COUNT(*) as count FROM team_match_holes WHERE team_match_id = ?
+          SELECT COUNT(*) as count FROM team_match_hole WHERE team_match_id = ?
         `, [teamMatchId]);
         
         // 모든 홀의 결과가 입력되었으면 매치 상태를 completed로 변경

@@ -139,9 +139,9 @@ export default async function handler(req, res) {
           let allSquare = 0;
           
           holeResults.forEach(hole => {
-            if (hole.winner_team === match.team1_id) {
+            if (hole.winner_team === 1) {
               team1Wins++;
-            } else if (hole.winner_team === match.team2_id) {
+            } else if (hole.winner_team === 2) {
               team2Wins++;
             } else {
               allSquare++;

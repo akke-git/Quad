@@ -417,7 +417,11 @@ export default function TeamMatches() {
                       {match.teams && match.teams.length >= 2 && (
                         <>
                           {/* 팀 1 */}
-                          <div className={`flex-1 relative ${match.winner === match.teams[0].team?.id ? 'border-4 border-yellow-500 rounded-lg p-2' : ''}`}>
+                          <div className={`flex-1 relative ${(() => {
+  const team1Total = (typeof match.team1_wins === 'number' ? match.team1_wins : 0) + (match.handicap_team === 1 ? (match.handicap_amount || 0) : 0);
+  const team2Total = (typeof match.team2_wins === 'number' ? match.team2_wins : 0) + (match.handicap_team === 2 ? (match.handicap_amount || 0) : 0);
+  return team1Total > team2Total ? 'border-4 border-yellow-500 rounded-lg p-2' : '';
+})()}`}>
                             <div className="flex md:flex-row flex-col items-center">
                               <div className="flex -space-x-2 md:mr-2 mb-2 md:mb-0">
                                 {/* 팀 멤버 이미지 표시 */}
@@ -454,15 +458,18 @@ export default function TeamMatches() {
                                 )}
                               </div>
                               <div className="text-center md:text-left">
-                                <div className="text-white font-medium">{match.teams[0].team?.name || `팀 1`}</div>
+                                <div className="text-white font-medium flex items-center">{match.teams[0].team?.name || `팀 1`}{(() => {
+  const team1Total = (typeof match.team1_wins === 'number' ? match.team1_wins : 0) + (match.handicap_team === 1 ? (match.handicap_amount || 0) : 0);
+  const team2Total = (typeof match.team2_wins === 'number' ? match.team2_wins : 0) + (match.handicap_team === 2 ? (match.handicap_amount || 0) : 0);
+  if (team1Total > team2Total) {
+    return <span className="ml-2 text-yellow-400 font-bold flex items-center">🏆</span>;
+  }
+  return null;
+})()}</div>
                               </div>
                               
                               {/* 승리팀 표시 (이 팀이 승리한 경우) */}
-                              {match.winner === match.teams[0].team?.id && (
-                                <div className="absolute -top-2 -left-2 bg-yellow-500 text-black font-bold rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-3 border-gray-800">
-                                  🏆
-                                </div>
-                              )}
+                              
                             </div>
                           </div>
                           
@@ -470,7 +477,11 @@ export default function TeamMatches() {
                           <div className="mx-4"></div>
                           
                           {/* 팀 2 */}
-                          <div className={`flex-1 relative ${match.winner === match.teams[1].team?.id ? 'border-4 border-yellow-500 rounded-lg p-2' : ''}`}>
+                          <div className={`flex-1 relative ${(() => {
+  const team1Total = (typeof match.team1_wins === 'number' ? match.team1_wins : 0) + (match.handicap_team === 1 ? (match.handicap_amount || 0) : 0);
+  const team2Total = (typeof match.team2_wins === 'number' ? match.team2_wins : 0) + (match.handicap_team === 2 ? (match.handicap_amount || 0) : 0);
+  return team2Total > team1Total ? 'border-4 border-yellow-500 rounded-lg p-2' : '';
+})()}`}>
                             <div className="flex md:flex-row flex-col items-center">
                               <div className="flex -space-x-2 md:mr-2 mb-2 md:mb-0">
                                 {/* 팀 멤버 이미지 표시 */}
@@ -507,15 +518,18 @@ export default function TeamMatches() {
                                 )}
                               </div>
                               <div className="text-center md:text-left">
-                                <div className="text-white font-medium">{match.teams[1].team?.name || `팀 2`}</div>
+                                <div className="text-white font-medium flex items-center">{match.teams[1].team?.name || `팀 2`}{(() => {
+  const team1Total = (typeof match.team1_wins === 'number' ? match.team1_wins : 0) + (match.handicap_team === 1 ? (match.handicap_amount || 0) : 0);
+  const team2Total = (typeof match.team2_wins === 'number' ? match.team2_wins : 0) + (match.handicap_team === 2 ? (match.handicap_amount || 0) : 0);
+  if (team2Total > team1Total) {
+    return <span className="ml-2 text-yellow-400 font-bold flex items-center">🏆</span>;
+  }
+  return null;
+})()}</div>
                               </div>
                               
                               {/* 승리팀 표시 (이 팀이 승리한 경우) */}
-                              {match.winner === match.teams[1].team?.id && (
-                                <div className="absolute -top-2 -left-2 bg-yellow-500 text-black font-bold rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-3 border-gray-800">
-                                  🏆
-                                </div>
-                              )}
+                              
                             </div>
                           </div>
                         </>

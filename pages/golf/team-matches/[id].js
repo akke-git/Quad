@@ -83,10 +83,10 @@ export default function TeamMatchDetail() {
           let resultClass = "bg-gray-700"; // A.S(All Square)
           let resultText = "A.S";
           
-          if (hole.winner_team === match.teams[0].id) {
+          if (hole.winner_team === 1) {
             resultClass = "bg-blue-600";
             resultText = "1팀";
-          } else if (hole.winner_team === match.teams[1].id) {
+          } else if (hole.winner_team === 2) {
             resultClass = "bg-red-600";
             resultText = "2팀";
           }
@@ -207,16 +207,20 @@ export default function TeamMatchDetail() {
               {/* 팀 1 정보 */}
               <div className={`bg-gray-700 p-4 rounded-md ${match.winner === match.teams[0].id ? 'border-4 border-yellow-500' : ''}`}>
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-lg font-semibold">1팀: {match.teams[0].team?.name || '팀 정보 없음'}</h2>
+                  <h2 className="text-lg font-semibold flex items-center">1팀: {match.teams[0].team?.name || '팀 정보 없음'}{(() => {
+  const team1Total = (typeof match.team1_wins === 'number' ? match.team1_wins : 0) + (match.handicap_team === 1 ? (match.handicap_amount || 0) : 0);
+  const team2Total = (typeof match.team2_wins === 'number' ? match.team2_wins : 0) + (match.handicap_team === 2 ? (match.handicap_amount || 0) : 0);
+  if (team1Total > team2Total) {
+    return <span className="ml-2 text-yellow-400 font-bold flex items-center">🏆 WIN</span>;
+  }
+  return null;
+})()}</h2>
                   {match.winner === match.teams[0].id && (
                     <div className="bg-yellow-500 text-black font-bold rounded-full w-10 h-10 flex items-center justify-center">
                       🏆
                     </div>
                   )}
                 </div>
-                <p className="text-sm mb-2">
-                  <span className="text-gray-400">팀 핸디캡:</span> {match.team1_handicap?.team_handicap || 0}
-                </p>
                 <p className="text-sm mb-2">
                   <span className="text-gray-400">승리 홀:</span> {match.team1_wins || 0}
                 </p>
@@ -229,16 +233,20 @@ export default function TeamMatchDetail() {
               {/* 팀 2 정보 */}
               <div className={`bg-gray-700 p-4 rounded-md ${match.winner === match.teams[1].id ? 'border-4 border-yellow-500' : ''}`}>
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-lg font-semibold">2팀: {match.teams[1].team?.name || '팀 정보 없음'}</h2>
+                  <h2 className="text-lg font-semibold flex items-center">2팀: {match.teams[1].team?.name || '팀 정보 없음'}{(() => {
+  const team1Total = (typeof match.team1_wins === 'number' ? match.team1_wins : 0) + (match.handicap_team === 1 ? (match.handicap_amount || 0) : 0);
+  const team2Total = (typeof match.team2_wins === 'number' ? match.team2_wins : 0) + (match.handicap_team === 2 ? (match.handicap_amount || 0) : 0);
+  if (team2Total > team1Total) {
+    return <span className="ml-2 text-yellow-400 font-bold flex items-center">🏆 WIN</span>;
+  }
+  return null;
+})()}</h2>
                   {match.winner === match.teams[1].id && (
                     <div className="bg-yellow-500 text-black font-bold rounded-full w-10 h-10 flex items-center justify-center">
                       🏆
                     </div>
                   )}
                 </div>
-                <p className="text-sm mb-2">
-                  <span className="text-gray-400">팀 핸디캡:</span> {match.team2_handicap?.team_handicap || 0}
-                </p>
                 <p className="text-sm mb-2">
                   <span className="text-gray-400">승리 홀:</span> {match.team2_wins || 0}
                 </p>
