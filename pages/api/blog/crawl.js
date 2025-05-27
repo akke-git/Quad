@@ -1,5 +1,5 @@
 // pages/api/blog/crawl.js
-import { chromium } from 'playwright';
+import axios from 'axios';
 import { load } from 'cheerio';
 import { query } from '../../../lib/db';
 
@@ -14,20 +14,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
   }
 
-  let browser;
   try {
-    // Playwright로 Chromium 실행
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      viewport: { width: 1280, height: 800 }
+    // axios로 페이지 내용 가져오기
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 30000
     });
-    const page = await context.newPage();
-    page.setDefaultTimeout(30000);
-    await page.goto(url, { waitUntil: 'networkidle' });
-
+    
     // 페이지 HTML 가져오기
-    const html = await page.content();
+    const html = response.data;
     if (!html) {
       return res.status(500).json({ message: '페이지 내용 로드 실패' });
     }
@@ -129,13 +126,8 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('크롤링 오류:', error);
-    return res.status(500).json({ 
-      message: '포스트 저장 중 오류가 발생했습니다: ' + error.message,
-      error: error.toString(),
-      stack: error.stack
-    });
+    return res.status(500).json({ message: `크롤링 중 오류 발생: ${error.message}` });
   } finally {
-    if (browser) await browser.close();
   }
 }
 

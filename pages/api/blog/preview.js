@@ -1,5 +1,5 @@
 // pages/api/blog/preview.js
-import { chromium } from 'playwright';
+import axios from 'axios';
 import { load } from 'cheerio';
 
 export default async function handler(req, res) {
@@ -12,28 +12,24 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'URL을 입력해주세요.' });
   }
 
-  let browser;
   try {
-    // Playwright로 Chromium 실행
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      viewport: { width: 1280, height: 800 },
+    // axios로 페이지 내용 가져오기
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 30000
     });
-    const page = await context.newPage();
-
-    page.setDefaultTimeout(30000);
-    await page.goto(url, { waitUntil: 'networkidle' });
-
-    // 페이지 제목 및 HTML 가져오기
-    const title = await page.title();
-    const html = await page.content();
+    
+    // 페이지 HTML 가져오기
+    const html = response.data;
     if (!html) {
       return res.status(500).json({ message: '페이지 내용 로드 실패' });
     }
-
+    
     // Cheerio로 파싱
     const $ = load(html);
+    const title = $('title').text() || '제목 없음';
     let contentHtml = '';
 
     // Brunch 전용 셀렉터 시도
@@ -69,10 +65,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ title, content: markdown });
 
   } catch (error) {
-    console.error('미리보기 오류:', error);
-    return res.status(500).json({ message: '미리보기를 가져오는 중 오류가 발생했습니다: ' + error.message });
-  } finally {
-    if (browser) await browser.close();
+    console.error('크롤링 오류:', error);
+    return res.status(500).json({ message: `크롤링 중 오류 발생: ${error.message}` });
   }
 }
 
