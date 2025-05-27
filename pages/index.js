@@ -335,7 +335,7 @@ export default function Home() {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
+        <div className="text-left mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-green-400 mb-4 font-ubuntu-mono">
             Sveltt's SS
           </h1>
