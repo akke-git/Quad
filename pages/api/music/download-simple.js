@@ -52,9 +52,9 @@ export default async function handler(req, res) {
     
     const outputFile = path.join(downloadDir, `${baseFileName}.%(ext)s`);
     
-    // yt-dlp 인수 설정
+    // yt-dlp 인수 설정 (더 유연한 포맷 선택)
     const args = [
-      '-f', 'bestaudio/best',
+      '-f', 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[height<=720]',
       '--extract-audio',
       '--audio-format', 'mp3',
       '--audio-quality', '0',
@@ -62,19 +62,20 @@ export default async function handler(req, res) {
       '--add-metadata',
       '--output', outputFile,
       '--no-warnings',
+      '--ignore-errors',
       `https://www.youtube.com/watch?v=${videoId}`
     ];
     
-    // 커스텀 메타데이터 추가
-    if (metadata.title) {
-      args.push('--replace-in-metadata', 'title', '.*', metadata.title);
+    // 커스텀 메타데이터 추가 (중복 방지)
+    if (metadata.title && metadata.title.trim()) {
+      args.push('--replace-in-metadata', 'title', '.*', metadata.title.trim());
     }
-    if (metadata.artist) {
-      args.push('--replace-in-metadata', 'artist', '.*', metadata.artist);
-      args.push('--replace-in-metadata', 'uploader', '.*', metadata.artist);
+    if (metadata.artist && metadata.artist.trim()) {
+      args.push('--replace-in-metadata', 'artist', '.*', metadata.artist.trim());
+      args.push('--replace-in-metadata', 'uploader', '.*', metadata.artist.trim());
     }
-    if (metadata.album) {
-      args.push('--replace-in-metadata', 'album', '.*', metadata.album);
+    if (metadata.album && metadata.album.trim()) {
+      args.push('--replace-in-metadata', 'album', '.*', metadata.album.trim());
     }
     
     console.log(`[Simple Download] Command: yt-dlp ${args.join(' ')}`);
