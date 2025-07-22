@@ -52,17 +52,18 @@ export default async function handler(req, res) {
     
     const outputFile = path.join(downloadDir, `${baseFileName}.%(ext)s`);
     
-    // yt-dlp 인수 설정 (더 유연한 포맷 선택)
+    // yt-dlp 인수 설정 (최대 호환성을 위한 설정)
     const args = [
-      '-f', 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[height<=720]',
+      '-f', 'worst',
       '--extract-audio',
       '--audio-format', 'mp3',
-      '--audio-quality', '0',
+      '--audio-quality', '128K',
       '--embed-metadata',
       '--add-metadata',
       '--output', outputFile,
       '--no-warnings',
       '--ignore-errors',
+      '--no-check-certificate',
       `https://www.youtube.com/watch?v=${videoId}`
     ];
     
