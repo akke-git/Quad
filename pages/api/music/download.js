@@ -360,23 +360,29 @@ async function processDownload(jobId, videoId, format, title = '', channel = '',
           
           console.log(`[${jobId}] Job marked as completed:`, jobs.get(jobId));
 
-          // 환경변수로 설정된 시간 후 파일 삭제 (기본값: 1시간)
-          const deleteTimeoutHours = parseInt(process.env.FILE_DELETE_TIMEOUT_HOURS) || 1;
-          const deleteTimeoutMs = deleteTimeoutHours * 60 * 60 * 1000;
+          // 파일 삭제 스케줄링 (0이면 삭제 안함)
+          const deleteTimeoutHours = parseInt(process.env.FILE_DELETE_TIMEOUT_HOURS) || 0;
           
-          setTimeout(() => {
-            try {
-              if (fs.existsSync(finalFilePath)) {
-                fs.unlinkSync(finalFilePath);
-                console.log(`[${jobId}] File deleted after ${deleteTimeoutHours} hours: ${finalFileName}`);
+          if (deleteTimeoutHours > 0) {
+            const deleteTimeoutMs = Math.min(deleteTimeoutHours * 60 * 60 * 1000, 2147483647);
+            console.log(`[${jobId}] File will be deleted after ${deleteTimeoutHours} hours`);
+            
+            setTimeout(() => {
+              try {
+                if (fs.existsSync(finalFilePath)) {
+                  fs.unlinkSync(finalFilePath);
+                  console.log(`[${jobId}] File deleted after ${deleteTimeoutHours} hours: ${finalFileName}`);
+                }
+                // 파일 삭제와 함께 job 정보도 삭제
+                jobs.delete(jobId);
+                console.log(`[${jobId}] Job removed from memory`);
+              } catch (err) {
+                console.error(`[${jobId}] Failed to delete file:`, err);
               }
-              // 파일 삭제와 함께 job 정보도 삭제
-              jobs.delete(jobId);
-              console.log(`[${jobId}] Job removed from memory`);
-            } catch (err) {
-              console.error(`[${jobId}] Failed to delete file:`, err);
-            }
-          }, deleteTimeoutMs);
+            }, deleteTimeoutMs);
+          } else {
+            console.log(`[${jobId}] File deletion disabled (FILE_DELETE_TIMEOUT_HOURS=${deleteTimeoutHours})`);
+          }
 
         } else {
           console.error(`[${jobId}] Downloaded file not found in directory`);

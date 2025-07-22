@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     
     const outputFile = path.join(downloadDir, `${baseFileName}.%(ext)s`);
     
-    // yt-dlp 인수 설정 (최대 호환성을 위한 설정)
+    // yt-dlp 인수 설정 (웹서버 환경 최적화)
     const args = [
       '-f', 'worst',
       '--extract-audio',
@@ -64,6 +64,9 @@ export default async function handler(req, res) {
       '--no-warnings',
       '--ignore-errors',
       '--no-check-certificate',
+      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      '--sleep-interval', '1',
+      '--max-sleep-interval', '3',
       `https://www.youtube.com/watch?v=${videoId}`
     ];
     
@@ -81,9 +84,19 @@ export default async function handler(req, res) {
     
     console.log(`[Simple Download] Command: yt-dlp ${args.join(' ')}`);
     
-    // Promise로 yt-dlp 실행
+    // Promise로 yt-dlp 실행 (절대 경로 사용)
     const downloadResult = await new Promise((resolve, reject) => {
-      const ytdlp = spawn('yt-dlp', args);
+      // yt-dlp 실행 파일 경로 찾기
+      const { execSync } = require('child_process');
+      let ytdlpPath = 'yt-dlp';
+      try {
+        ytdlpPath = execSync('which yt-dlp', { encoding: 'utf8' }).trim();
+        console.log(`[Simple Download] Using yt-dlp at: ${ytdlpPath}`);
+      } catch (e) {
+        console.log(`[Simple Download] Using default yt-dlp command`);
+      }
+      
+      const ytdlp = spawn(ytdlpPath, args);
       let output = '';
       let errorOutput = '';
       
@@ -146,21 +159,27 @@ export default async function handler(req, res) {
     
     console.log(`[Simple Download] Found file: ${downloadedFile}`);
     
-    // 파일 삭제 스케줄링
-    const deleteTimeoutHours = parseInt(process.env.FILE_DELETE_TIMEOUT_HOURS) || 1;
-    const deleteTimeoutMs = deleteTimeoutHours * 60 * 60 * 1000;
+    // 파일 삭제 스케줄링 (0이면 삭제 안함)
+    const deleteTimeoutHours = parseInt(process.env.FILE_DELETE_TIMEOUT_HOURS) || 0;
     
-    setTimeout(() => {
-      try {
-        const filePath = path.join(downloadDir, downloadedFile);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`[Simple Download] File deleted: ${downloadedFile}`);
+    if (deleteTimeoutHours > 0) {
+      const deleteTimeoutMs = Math.min(deleteTimeoutHours * 60 * 60 * 1000, 2147483647);
+      console.log(`[Simple Download] File will be deleted after ${deleteTimeoutHours} hours`);
+      
+      setTimeout(() => {
+        try {
+          const filePath = path.join(downloadDir, downloadedFile);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`[Simple Download] File deleted after ${deleteTimeoutHours} hours: ${downloadedFile}`);
+          }
+        } catch (err) {
+          console.error(`[Simple Download] Failed to delete file:`, err);
         }
-      } catch (err) {
-        console.error(`[Simple Download] Failed to delete file:`, err);
-      }
-    }, deleteTimeoutMs);
+      }, deleteTimeoutMs);
+    } else {
+      console.log(`[Simple Download] File deletion disabled (FILE_DELETE_TIMEOUT_HOURS=${deleteTimeoutHours})`);
+    }
     
     // 성공 응답
     res.status(200).json({
