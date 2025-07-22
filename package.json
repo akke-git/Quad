@@ -29,7 +29,8 @@
     "rehype-highlight": "^7.0.2",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "serverless-mysql": "^2.1.0"
+    "serverless-mysql": "^2.1.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",

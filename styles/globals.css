@@ -3,6 +3,7 @@
 /* 폰트 로딩 방식 유지 (Next.js _document.js에서도 로드함) */
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap');
 @import 'github-markdown-css/github-markdown.css';
 
 @tailwind base;
@@ -34,6 +35,10 @@
 
 .font-apple-gothic {
   font-family: 'Apple SD Gothic Neo', 'AppleSDGothicNeo', 'Noto Sans KR', sans-serif !important;
+}
+
+.font-dancing-script {
+  font-family: 'Dancing Script', cursive !important;
 }
 
 a {

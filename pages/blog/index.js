@@ -1,5 +1,7 @@
 // pages/blog/index.js
 
+// 1. 필요한 외부 라이브러리와 컴포넌트 import
+// - React의 상태/생명주기 관리 훅, Next.js의 head/라우팅, 커스텀 컴포넌트, HTTP 요청 라이브러리
 import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -8,48 +10,50 @@ import BlogPostCard from '../../components/BlogPostCard';
 import MarkdownEditor from '../../components/MarkdownEditor';
 import axios from 'axios';
 
+// 2. Blog 메인 컴포넌트 함수 시작
 export default function Blog() {
-  const [posts, setPosts] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [selectedTag, setSelectedTag] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // 2-1. 상태 선언: 화면에서 관리할 데이터
+  // - 글, 태그, 선택된 태그, 검색어, 모달, 로딩 상태 등
+  const [posts, setPosts] = useState([]); // 글 목록
+  const [tags, setTags] = useState([]); // 태그 목록
+  const [selectedTag, setSelectedTag] = useState(null); // 선택된 태그
+  const [searchQuery, setSearchQuery] = useState(''); // 검색어
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // 새 글 작성 모달
+  const [isLoading, setIsLoading] = useState(true); // 데이터 로딩 상태
 
-  // 포스트 및 태그 데이터 가져오기
+  // 3. 데이터 불러오기 함수 (글/태그)
+  // - 서버에서 글 목록과 태그 목록을 받아와 상태에 저장
   const fetchData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      
-      // 포스트 데이터 가져오기
+      setIsLoading(true); // 로딩 시작
+      // 글 목록 요청
       const postsResponse = await axios.get('/api/blog/posts');
       setPosts(postsResponse.data);
-      
-      // 태그 데이터 가져오기
+      // 태그 목록 요청
       const tagsResponse = await axios.get('/api/blog/tags');
       setTags(tagsResponse.data);
     } catch (error) {
       console.error('데이터를 가져오는 중 오류 발생:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 로딩 종료
     }
   }, []);
 
+  // 3-1. 컴포넌트가 처음 화면에 나타날 때 데이터 불러오기
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // 검색 기능 구현
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  
-  // 검색 함수
+  // 4. 검색 관련 상태 및 함수
+  const [isSearching, setIsSearching] = useState(false); // 검색 중 여부
+  const [searchResults, setSearchResults] = useState([]); // 검색 결과
+
+  // 4-1. 검색 함수: 입력된 검색어로 서버에 검색 요청
   const handleSearch = useCallback(async (query) => {
     if (!query || query.trim() === '') {
-      setSearchResults([]);
+      setSearchResults([]); // 검색어 없으면 결과 비움
       return;
     }
-    
     setIsSearching(true);
     try {
       const response = await axios.get(`/api/blog/search?q=${encodeURIComponent(query)}`);
@@ -60,8 +64,8 @@ export default function Blog() {
       setIsSearching(false);
     }
   }, []);
-  
-  // 검색어 입력 시 검색 실행 (디바운스 적용)
+
+  // 4-2. 검색어 입력시 0.5초 후 검색 실행(디바운스)
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchQuery) {
@@ -69,36 +73,37 @@ export default function Blog() {
       } else {
         setSearchResults([]);
       }
-    }, 500); // 500ms 디바운스
-    
+    }, 500); // 500ms 대기
     return () => clearTimeout(timer);
   }, [searchQuery, handleSearch]);
   
-  // 태그 및 검색어로 포스트 필터링
+  // 5. 태그와 검색어로 글 목록 필터링
+  // - 검색어가 있으면 검색 결과에서, 없으면 전체 글에서 선택된 태그만 남김
   const filteredPosts = searchQuery 
     ? searchResults.filter(post => selectedTag ? post.tags && post.tags.some(tag => tag.id === selectedTag) : true)
     : posts.filter(post => selectedTag ? post.tags && post.tags.some(tag => tag.id === selectedTag) : true);
 
+  // 6. 실제 화면에 보여줄 UI 반환(JSX)
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      {/* 6-1. 페이지 <head> 설정 */}
       <Head>
         <title>blog | Sveltt's Web</title>
         <meta name="description" content="Sveltt의 개인 블로그" />
       </Head>
-
+      {/* 6-2. 상단 네비게이션 */}
       <Navbar />
-      
+      {/* 6-3. 메인 컨텐츠 */}
       <main className="container mx-auto px-4 py-8">
+        {/* 6-3-1. 블로그 타이틀 및 설명 */}
         <div className="text-left mb-8">
-          <h1 className="text-6xl font-bold text-green-400 mb-4 font-apple-gothic">
-            Blog
-          </h1>
+          <h1 className="text-6xl font-bold text-green-400 mb-4 font-apple-gothic">Blog</h1>
           <p className="text-xl text-gray-300 font-apple-gothic">
             Markdown : dev, news, article, edu doc, etc
           </p>
         </div>
-
-        {/* 블로그 컨트롤 */}
+        {/* 6-3-2. 검색/태그/새글 버튼 컨트롤 */}
+        {/* 검색창, 태그 관리, 새 글 작성 버튼이 한 줄에 배치됨 */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
           {/* 검색 필드 */}
           <div className="relative w-full md:w-64">
@@ -115,8 +120,7 @@ export default function Blog() {
               </svg>
             </div>           
           </div>
-          
-          {/* 새 글 작성 버튼 및 태그 관리 버튼 */}
+          {/* 태그 관리 및 새 글 작성 버튼 */}
           <div className="flex space-x-3">
             <Link href="/blog/tags" className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors duration-300 font-apple-gothic">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -135,8 +139,7 @@ export default function Blog() {
             </button>
           </div>
         </div>
-
-        {/* 태그 필터 */}
+        {/* 6-3-3. 태그 필터 버튼 */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">
             <button
@@ -149,7 +152,6 @@ export default function Blog() {
             >
               전체
             </button>
-            
             {tags.map(tag => (
               <button
                 key={tag.id}
@@ -167,8 +169,7 @@ export default function Blog() {
           </div>
           <br></br>
         </div>
-
-        {/* 로딩 상태 */}
+        {/* 6-3-4. 로딩/검색 중 안내 */}
         {isLoading || isSearching ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
@@ -178,7 +179,7 @@ export default function Blog() {
           </div>
         ) : (
           <>
-            {/* 블로그 포스트 목록 */}
+            {/* 6-3-5. 블로그 포스트 목록 or 안내 메시지 */}
             {filteredPosts.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 max-w-4xl mx-auto">
                 {filteredPosts.map(post => (
@@ -205,7 +206,6 @@ export default function Blog() {
           </>
         )}
       </main>
-
       {/* 새 글 작성 모달 */}
       {isCreateModalOpen && (
         <CreatePostModal 

@@ -97,6 +97,9 @@ export default function Navbar() {
               <Link href="/blog" className="text-gray-300 hover:text-green-400 px-3 py-2 rounded-md font-medium font-ubuntu-mono">
                 Blog
               </Link>
+              <Link href="/music" className="text-gray-300 hover:text-green-400 px-3 py-2 rounded-md font-medium font-ubuntu-mono">
+                Music
+              </Link>
               <div className="relative" ref={golfSubmenuRef}>
                 <button 
                   onClick={toggleGolfSubmenu}
@@ -164,6 +167,11 @@ export default function Navbar() {
             <Link href="/blog"
               className="text-gray-300 hover:text-green-400 block px-3 py-2 rounded-md font-medium font-ubuntu-mono">
               Blog
+            </Link>
+            
+            <Link href="/music"
+              className="text-gray-300 hover:text-green-400 block px-3 py-2 rounded-md font-medium font-ubuntu-mono">
+              Music
             </Link>
             
             {/* 모바일 골프 메뉴 */}

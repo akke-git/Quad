@@ -458,13 +458,35 @@ export default function RoundDetail() {
                           </td>
                           <td className="py-3 px-4 text-center">
                             {isEditing ? (
-                              <input
-                                type="number"
-                                min="1"
-                                value={score?.score || score?.par || 4}
-                                onChange={(e) => handleScoreChange(holeNumber, 'score', e.target.value)}
-                                className="bg-gray-700 text-white border border-gray-600 rounded-md px-2 py-1 w-16 text-center"
-                              />
+                              <div className="flex items-center justify-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentScore = score?.score || score?.par || 4;
+                                    if (currentScore > 1) {
+                                      handleScoreChange(holeNumber, 'score', currentScore - 1);
+                                    }
+                                  }}
+                                  className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-sm font-bold"
+                                >
+                                  -
+                                </button>
+                                <span className="w-8 text-center text-white font-medium">
+                                  {score?.score || score?.par || 4}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentScore = score?.score || score?.par || 4;
+                                    if (currentScore < 15) {
+                                      handleScoreChange(holeNumber, 'score', currentScore + 1);
+                                    }
+                                  }}
+                                  className="w-8 h-8 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center text-sm font-bold"
+                                >
+                                  +
+                                </button>
+                              </div>
                             ) : (
                               <span className={getScoreClass(score?.par, score?.score)}>
                                 {getScoreText(score?.par, score?.score)}
@@ -473,13 +495,35 @@ export default function RoundDetail() {
                           </td>
                           <td className="py-3 px-4 text-center">
                             {isEditing ? (
-                              <input
-                                type="number"
-                                min="0"
-                                value={score?.putts !== null ? score?.putts : ''}
-                                onChange={(e) => handleScoreChange(holeNumber, 'putts', e.target.value)}
-                                className="bg-gray-700 text-white border border-gray-600 rounded-md px-2 py-1 w-16 text-center"
-                              />
+                              <div className="flex items-center justify-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentPutts = score?.putts || 0;
+                                    if (currentPutts > 0) {
+                                      handleScoreChange(holeNumber, 'putts', currentPutts - 1);
+                                    }
+                                  }}
+                                  className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-sm font-bold"
+                                >
+                                  -
+                                </button>
+                                <span className="w-8 text-center text-white font-medium">
+                                  {score?.putts !== null ? score?.putts : 0}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentPutts = score?.putts || 0;
+                                    if (currentPutts < 10) {
+                                      handleScoreChange(holeNumber, 'putts', currentPutts + 1);
+                                    }
+                                  }}
+                                  className="w-8 h-8 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center text-sm font-bold"
+                                >
+                                  +
+                                </button>
+                              </div>
                             ) : (
                               score?.putts !== null ? score?.putts : '-'
                             )}
