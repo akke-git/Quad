@@ -109,14 +109,30 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
 
   const handleLocalDownload = () => {
     if (downloadUrl) {
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = fileName;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log('[Modal Simple] Local download initiated');
+      console.log('[Modal Simple] Starting download:', { downloadUrl, fileName });
+      
+      // 파일 존재 여부 확인을 위한 fetch 요청
+      fetch(downloadUrl, { method: 'HEAD' })
+        .then(response => {
+          console.log('[Modal Simple] File check response:', response.status);
+          if (response.ok) {
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log('[Modal Simple] Local download initiated');
+          } else {
+            console.error('[Modal Simple] File not accessible:', response.status);
+            alert('파일을 다운로드할 수 없습니다. 파일이 존재하지 않거나 접근할 수 없습니다.');
+          }
+        })
+        .catch(error => {
+          console.error('[Modal Simple] File check error:', error);
+          alert('파일 확인 중 오류가 발생했습니다.');
+        });
     }
   };
 

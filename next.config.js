@@ -11,6 +11,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // 정적 파일 서빙을 위한 리다이렉트
+  async rewrites() {
+    return [
+      {
+        source: '/downloads/:path*',
+        destination: '/api/downloads/:path*',
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

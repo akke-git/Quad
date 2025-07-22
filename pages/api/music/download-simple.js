@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Invalid format. Only mp3 is supported' });
   }
 
-  const downloadDir = path.join(process.cwd(), 'public', 'downloads');
+  const downloadDir = process.env.DOWNLOAD_DIR || '/ubuntu/Music/Music_youtube';
   
   try {
     console.log(`[Simple Download] Starting download for video: ${videoId}`);

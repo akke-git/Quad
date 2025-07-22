@@ -110,7 +110,7 @@ function sanitizeFileName(filename) {
 
 // 다운로드 처리 함수
 async function processDownload(jobId, videoId, format, title = '', channel = '', metadata = {}) {
-  const downloadDir = path.join(process.cwd(), 'public', 'downloads');
+  const downloadDir = '/ubuntu/Music/Music_youtube';
   
   // 파일명 생성: "아티스트 - 곡명.확장자" 형식
   let baseFileName = '';
