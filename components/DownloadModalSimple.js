@@ -11,6 +11,8 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
     comment: ''
   });
   
+  const [embedThumbnail, setEmbedThumbnail] = useState(true);
+  
   const [downloadStatus, setDownloadStatus] = useState('idle'); // idle, downloading, completed, failed
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [fileName, setFileName] = useState('');
@@ -75,7 +77,8 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
         format,
         title: metadata.title,
         channel: metadata.artist,
-        metadata: metadata
+        metadata: metadata,
+        embedThumbnail: embedThumbnail
       };
       
       console.log('[Modal Simple] Sending download request:', requestBody);
@@ -141,6 +144,7 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
     setDownloadUrl(null);
     setFileName('');
     setErrorMessage('');
+    setEmbedThumbnail(true);
   };
 
   const handleClose = () => {
@@ -277,6 +281,23 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
               className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
             />
           </div>
+          
+          {/* 썸네일 임베딩 옵션 */}
+          <div className="mt-4">
+            <label className="flex items-center space-x-2 text-sm font-medium text-gray-300 font-apple-gothic">
+              <input
+                type="checkbox"
+                checked={embedThumbnail}
+                onChange={(e) => setEmbedThumbnail(e.target.checked)}
+                className="rounded bg-gray-700 border-gray-600 text-green-500 focus:ring-green-500"
+              />
+              <span>썸네일을 MP3 파일에 포함</span>
+            </label>
+            <p className="text-xs text-gray-400 mt-1 font-apple-gothic">
+              체크하면 YouTube 썸네일이 MP3 파일의 앨범 아트로 저장됩니다.
+            </p>
+          </div>
+          
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
               파일명

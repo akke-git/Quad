@@ -12,7 +12,7 @@ const services = [
     id: 1,
     name: 'NginxPM',
     description: 'Nginx Proxy Manager',
-    url: 'http://npm.akke.shop',
+    url: 'http://npm.juux.net',
     icon: 'images/nginx.png',
     dockerConfig: `version: "3"
 services:
@@ -32,7 +32,7 @@ services:
     id: 2,
     name: 'Trilium',
     description: 'Note-taking application',
-    url: 'http://note.akke.shop',
+    url: 'http://note.juux.net',
     icon: 'images/note.png',
     dockerConfig: `version: "3.8"
 
@@ -56,7 +56,7 @@ networks:
     id: 3,
     name: 'Portainer',
     description: 'Docker Management tool',
-    url: 'http://port.akke.shop',
+    url: 'http://port.juux.net',
     icon: 'images/port.png',
     dockerConfig:`services:
   portainer:
@@ -82,7 +82,7 @@ networks:
     id: 4,
     name: 'Komga',
     description: 'toon viewer',
-    url: 'http://toon.akke.shop',
+    url: 'http://toon.juux.net',
     icon: 'images/toon.png',
     dockerConfig: `version: "3.8"
 
@@ -112,7 +112,7 @@ networks:
     id: 5,
     name: 'Emby',
     description: 'Media Music server',
-    url: 'http://mov.akke.shop',
+    url: 'http://mov.juux.net',
     icon: 'images/emby.png',
     dockerConfig: `version: "3.8"
 
@@ -142,7 +142,7 @@ networks:
     id: 6,
     name: 'NocoDB',
     description: 'Relational Database',
-    url: 'http://db.akke.shop',
+    url: 'http://db.juux.net',
     icon: 'images/noco.png',
     dockerConfig: `version: "3.8"
 
@@ -166,7 +166,7 @@ networks:
     id: 7,
     name: 'PhotoPrism',
     description: 'Photo Management & Gallery',
-    url: 'http://photo.akke.shop',
+    url: 'http://photo.juux.net',
     icon: 'images/photo.png',
     dockerConfig: `# Example Docker Compose config file for PhotoPrism (Linux / AMD64)
 #
@@ -287,7 +287,7 @@ networks:
     id: 8,
     name: 'SFTPgo',
     description: 'SFTP Server',
-    url: 'http://file.akke.shop',
+    url: 'http://file.juux.net',
     icon: 'images/ftp.png',
     dockerConfig:  `version: "3.8"
     services:
@@ -337,7 +337,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         <div className="text-left mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-green-400 mb-4 font-ubuntu-mono">
-            Sveltt's SS
+            Juux : main
           </h1>
           <p className="text-xl text-gray-300 font-ubuntu-mono"> 
             Linux - Docker service
