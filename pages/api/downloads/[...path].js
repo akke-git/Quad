@@ -19,14 +19,14 @@ export default function handler(req, res) {
     }
 
     // 환경 변수에서 다운로드 디렉토리 가져오기 (기본값 제공)
-    const downloadsDir = process.env.DOWNLOAD_DIR || './public/downloads';
-    const fullPath = path.join(downloadsDir, filePath);
+    const downloadsDir = path.resolve(process.env.DOWNLOAD_DIR || './public/downloads');
+    const fullPath = path.resolve(path.join(downloadsDir, filePath));
     
     console.log(`[Download API] Request for file: ${filePath}`);
     console.log(`[Download API] Downloads directory: ${downloadsDir}`);
     console.log(`[Download API] Full path: ${fullPath}`);
     
-    // 보안: 디렉토리 트래버설 공격 방지
+    // 보안: 디렉토리 트래버설 공격 방지 (절대 경로로 비교)
     if (!fullPath.startsWith(downloadsDir)) {
       console.log(`[Download API] Security violation - path outside downloads dir: ${fullPath}`);
       return res.status(403).json({ message: 'Access denied' });

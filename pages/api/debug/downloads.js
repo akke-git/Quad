@@ -9,14 +9,14 @@ export default function handler(req, res) {
   }
 
   try {
-    const downloadsDir = process.env.DOWNLOAD_DIR || './public/downloads';
+    const downloadsDir = path.resolve(process.env.DOWNLOAD_DIR || './public/downloads');
     
     const debugInfo = {
       // 환경 정보
       environment: {
         nodeEnv: process.env.NODE_ENV,
         downloadDir: process.env.DOWNLOAD_DIR,
-        defaultDir: './public/downloads',
+        defaultDir: path.resolve('./public/downloads'),
         resolvedDir: downloadsDir,
         processUser: process.getuid ? process.getuid() : 'unknown',
         processGroup: process.getgid ? process.getgid() : 'unknown'
@@ -150,7 +150,7 @@ export default function handler(req, res) {
     res.status(500).json({
       error: error.message,
       stack: error.stack,
-      downloadsDir: process.env.DOWNLOAD_DIR || './public/downloads'
+      downloadsDir: path.resolve(process.env.DOWNLOAD_DIR || './public/downloads')
     });
   }
 }
