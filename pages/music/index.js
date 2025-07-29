@@ -114,7 +114,7 @@ export default function Music() {
         />
       </div>
       
-      <main className="container mx-auto px-4 py-4 md:py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-4 md:py-8">
 
         {/* 검색 섹션 */}
         <div className="group relative bg-gradient-to-br from-slate-800/90 via-slate-800/50 to-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden transition-all duration-500 border border-slate-700/50 mb-8">
@@ -124,7 +124,7 @@ export default function Music() {
           {/* 글로우 효과 */}
           <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-30" />
           
-          <div className="relative px-8 pt-8 pb-6">
+          <div className="relative px-4 sm:px-8 pt-8 pb-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
                 <span className="text-2xl">🎵</span>
@@ -192,7 +192,7 @@ export default function Music() {
             {/* 배경 그라디언트 오버레이 */}
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-blue-500/5 opacity-50" />
             
-            <div className="relative px-8 pt-8 pb-6">
+            <div className="relative px-4 sm:px-8 pt-8 pb-6">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
                   <span className="text-2xl">🎯</span>
@@ -206,76 +206,79 @@ export default function Music() {
                     {/* 카드 배경 그라디언트 */}
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-blue-500/0 group-hover/card:from-emerald-500/5 group-hover/card:to-blue-500/5 transition-all duration-300" />
                     
-                    <div className="relative p-6">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div className="relative p-3 sm:p-6">
+                      <div className="flex flex-col gap-4">
                         {/* 썸네일과 텍스트 정보 */}
-                        <div className="flex items-start space-x-4 flex-1 min-w-0">
+                        <div className="flex items-start space-x-3 flex-1 min-w-0">
                           {/* 썸네일 */}
                           <div className="relative flex-shrink-0 group/thumb">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-blue-500/20 rounded-xl blur-md group-hover/thumb:blur-lg transition-all duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-blue-500/20 rounded-lg blur-md group-hover/thumb:blur-lg transition-all duration-300" />
                             <img 
                               src={video.thumbnail} 
                               alt={video.title}
-                              className="relative w-32 h-24 object-cover rounded-xl border border-slate-500/30 group-hover/thumb:border-emerald-400/50 transition-all duration-300"
+                              className="relative w-20 h-15 sm:w-32 sm:h-24 object-cover rounded-lg border border-slate-500/30 group-hover/thumb:border-emerald-400/50 transition-all duration-300"
                               onError={(e) => {
                                 e.target.src = `https://i.ytimg.com/vi/${video.id}/default.jpg`;
                               }}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-xl" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-lg" />
                           </div>
                           
                           {/* 텍스트 정보 */}
-                          <div className="flex-1 min-w-0 space-y-3">
-                            <h3 className="text-xl font-bold text-white group-hover/card:bg-gradient-to-r group-hover/card:from-white group-hover/card:to-slate-200 group-hover/card:bg-clip-text group-hover/card:text-transparent transition-all duration-300 font-apple-gothic line-clamp-2">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <h3 className="text-sm sm:text-xl font-bold text-white group-hover/card:bg-gradient-to-r group-hover/card:from-white group-hover/card:to-slate-200 group-hover/card:bg-clip-text group-hover/card:text-transparent transition-all duration-300 font-apple-gothic leading-tight">
                               {video.title}
                             </h3>
-                            <p className="text-slate-300 font-apple-gothic line-clamp-1 opacity-80 group-hover/card:opacity-100 transition-opacity duration-300">
+                            <p className="text-slate-300 font-apple-gothic text-xs sm:text-sm opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 truncate">
                               📺 {video.channel}
                             </p>
-                            
-                            {/* 태그들 */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {/* 품질 태그 */}
-                              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-300 font-ubuntu-mono ${getQualityColorClass(video.audioQuality).replace('bg-', 'bg-').replace('text-', 'text-').replace('border-', 'border-')} shadow-lg`}>
-                                <div className="w-2 h-2 rounded-full mr-2 bg-current opacity-60 animate-pulse" />
-                                🎵 {getSimpleQuality(video.audioQuality)}
-                              </span>
-                              
-                              {/* 재생시간 태그 */}
-                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-300 font-ubuntu-mono bg-slate-500/20 text-slate-300 border-slate-500/30 shadow-lg">
-                                <div className="w-2 h-2 rounded-full mr-2 bg-slate-400 animate-pulse" />
-                                ⏱️ {video.duration}
-                              </span>
-                              
-                              {/* YouTube 링크 */}
-                              <a 
-                                href={video.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-300 font-ubuntu-mono bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 hover:scale-105 shadow-lg hover:shadow-blue-500/20"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="w-2 h-2 rounded-full mr-2 bg-blue-400 animate-pulse" />
-                                🔗 YouTube
-                              </a>
-                            </div>
                           </div>
                         </div>
                         
-                        {/* 다운로드 버튼 */}
-                        <div className="flex gap-2 justify-start md:justify-end flex-shrink-0">
-                          <button
-                            onClick={() => handleDownload(video.id, 'mp3')}
-                            className="group/btn relative px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-300 hover:text-white font-medium rounded-xl border border-emerald-500/30 hover:border-emerald-400/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/20 font-ubuntu-mono"
-                          >
-                            {/* 버튼 배경 효과 */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/0 group-hover/btn:from-white/5 group-hover/btn:to-white/0 rounded-xl transition-all duration-300" />
+                        {/* 태그들과 버튼 */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          {/* 태그들 */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* 품질 태그 */}
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-300 font-ubuntu-mono ${getQualityColorClass(video.audioQuality).replace('bg-', 'bg-').replace('text-', 'text-').replace('border-', 'border-')} shadow-lg`}>
+                              <div className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current opacity-60 animate-pulse" />
+                              🎵 {getSimpleQuality(video.audioQuality)}
+                            </span>
                             
-                            <div className="relative flex items-center space-x-2">
-                              <span className="text-lg">🎵</span>
-                              <span className="font-apple-gothic">MP3 다운로드</span>
-                            </div>
-                          </button>
+                            {/* 재생시간 태그 */}
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-300 font-ubuntu-mono bg-slate-500/20 text-slate-300 border-slate-500/30 shadow-lg">
+                              <div className="w-1.5 h-1.5 rounded-full mr-1.5 bg-slate-400 animate-pulse" />
+                              ⏱️ {video.duration}
+                            </span>
+                            
+                            {/* YouTube 링크 */}
+                            <a 
+                              href={video.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-300 font-ubuntu-mono bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 hover:scale-105 shadow-lg hover:shadow-blue-500/20"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full mr-1.5 bg-blue-400 animate-pulse" />
+                              🔗 YouTube
+                            </a>
+                          </div>
+                          
+                          {/* 다운로드 버튼 */}
+                          <div className="flex gap-2 justify-start sm:justify-end flex-shrink-0">
+                            <button
+                              onClick={() => handleDownload(video.id, 'mp3')}
+                              className="group/btn relative px-3 py-1.5 sm:px-6 sm:py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 hover:from-emerald-500/30 hover:to-blue-500/30 text-emerald-300 hover:text-white font-medium rounded-lg sm:rounded-xl border border-emerald-500/30 hover:border-emerald-400/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/20 font-ubuntu-mono"
+                            >
+                              {/* 버튼 배경 효과 */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/0 group-hover/btn:from-white/5 group-hover/btn:to-white/0 rounded-lg sm:rounded-xl transition-all duration-300" />
+                              
+                              <div className="relative flex items-center space-x-1 sm:space-x-1.5">
+                                <span className="text-xs sm:text-lg">🎵</span>
+                                <span className="font-apple-gothic text-xs sm:text-base">MP3 다운로드</span>
+                              </div>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -295,7 +298,7 @@ export default function Music() {
             {/* 글로우 효과 */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-30" />
             
-            <div className="relative px-8 pt-8 pb-6">
+            <div className="relative px-4 sm:px-8 pt-8 pb-6">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
                   <span className="text-2xl">📥</span>
@@ -376,7 +379,7 @@ export default function Music() {
           {/* 글로우 효과 */}
           <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-30" />
           
-          <div className="relative px-8 pt-8 pb-6">
+          <div className="relative px-4 sm:px-8 pt-8 pb-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-xl flex items-center justify-center">
                 <span className="text-2xl">📚</span>
