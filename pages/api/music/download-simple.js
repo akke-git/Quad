@@ -52,12 +52,13 @@ export default async function handler(req, res) {
     
     const outputFile = path.join(downloadDir, `${baseFileName}.%(ext)s`);
     
-    // yt-dlp 인수 설정 (웹서버 환경 최적화)
+    // yt-dlp 인수 설정 (최고 품질 우선)
     const args = [
-      '-f', 'worst',
+      '-f', 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',  // 고품질 오디오 포맷 우선순위
       '--extract-audio',
       '--audio-format', 'mp3',
-      '--audio-quality', '128K',
+      '--audio-quality', '0',  // 최고 품질 (VBR, 원본과 동일)
+      '--embed-metadata',      // 메타데이터 자동 임베드
       '--output', outputFile,
       '--no-warnings',
       '--ignore-errors',

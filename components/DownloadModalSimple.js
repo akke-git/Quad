@@ -5,7 +5,6 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
     title: '',
     artist: '',
     album: '',
-    track: '',
     year: '',
     genre: '',
     comment: ''
@@ -25,7 +24,6 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
         title: video.title || '',
         artist: video.channel || '',
         album: video.channel || '',
-        track: '1',
         year: new Date().getFullYear().toString(),
         genre: 'Music',
         comment: `Downloaded from YouTube: ${video.url}`
@@ -225,79 +223,138 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
               <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
                 제목
               </label>
-              <input
-                type="text"
-                value={metadata.title}
-                onChange={(e) => handleMetadataChange('title', e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={metadata.title}
+                  onChange={(e) => handleMetadataChange('title', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-apple-gothic"
+                />
+                {metadata.title && (
+                  <button
+                    type="button"
+                    onClick={() => handleMetadataChange('title', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
                 아티스트
               </label>
-              <input
-                type="text"
-                value={metadata.artist}
-                onChange={(e) => handleMetadataChange('artist', e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={metadata.artist}
+                  onChange={(e) => handleMetadataChange('artist', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-apple-gothic"
+                />
+                {metadata.artist && (
+                  <button
+                    type="button"
+                    onClick={() => handleMetadataChange('artist', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
                 앨범
               </label>
-              <input
-                type="text"
-                value={metadata.album}
-                onChange={(e) => handleMetadataChange('album', e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={metadata.album}
+                  onChange={(e) => handleMetadataChange('album', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-apple-gothic"
+                />
+                {metadata.album && (
+                  <button
+                    type="button"
+                    onClick={() => handleMetadataChange('album', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
-                트랙 번호
-              </label>
-              <input
-                type="text"
-                value={metadata.track}
-                onChange={(e) => handleMetadataChange('track', e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-              />
-            </div>
+          </div>
+          
+          {/* 년도와 장르를 한 라인에 배치 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
                 년도
               </label>
-              <input
-                type="text"
-                value={metadata.year}
-                onChange={(e) => handleMetadataChange('year', e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={metadata.year}
+                  onChange={(e) => handleMetadataChange('year', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-apple-gothic"
+                />
+                {metadata.year && (
+                  <button
+                    type="button"
+                    onClick={() => handleMetadataChange('year', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
                 장르
               </label>
-              <input
-                type="text"
-                value={metadata.genre}
-                onChange={(e) => handleMetadataChange('genre', e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={metadata.genre}
+                  onChange={(e) => handleMetadataChange('genre', e.target.value)}
+                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-apple-gothic"
+                />
+                {metadata.genre && (
+                  <button
+                    type="button"
+                    onClick={() => handleMetadataChange('genre', '')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
               코멘트
             </label>
-            <textarea
-              value={metadata.comment}
-              onChange={(e) => handleMetadataChange('comment', e.target.value)}
-              rows="3"
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-apple-gothic"
-            />
+            <div className="relative">
+              <textarea
+                value={metadata.comment}
+                onChange={(e) => handleMetadataChange('comment', e.target.value)}
+                rows="3"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-apple-gothic"
+              />
+              {metadata.comment && (
+                <button
+                  type="button"
+                  onClick={() => handleMetadataChange('comment', '')}
+                  className="absolute right-2 top-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
           
           {/* 썸네일 임베딩 옵션 */}
@@ -320,12 +377,23 @@ export default function DownloadModalSimple({ isOpen, onClose, video, format = '
             <label className="block text-sm font-medium text-gray-300 mb-1 font-apple-gothic">
               파일명
             </label>
-            <input
-              type="text"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white font-ubuntu-mono"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 pr-10 text-white font-ubuntu-mono"
+              />
+              {fileName && (
+                <button
+                  type="button"
+                  onClick={() => setFileName('')}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
