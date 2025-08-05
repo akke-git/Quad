@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx playwright install",
     "stop": "kill $(lsof -t -i:3000)"
   },
   "dependencies": {

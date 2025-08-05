@@ -3,7 +3,13 @@
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
 import ServiceCard from '../components/ServiceCard';
-import { useState } from 'react';
+import CompactServiceCard from '../components/CompactServiceCard';
+import SystemStatusPanel from '../components/SystemStatusPanel';
+import DockerStatusPanel from '../components/DockerStatusPanel';
+import NetworkStatusPanel from '../components/NetworkStatusPanel';
+import SecurityPanel from '../components/SecurityPanel';
+import UpdateSettings from '../components/UpdateSettings';
+import { useState, useCallback } from 'react';
 import DockerConfigModal from '../components/DockerConfigModal';
 
 // 서비스 데이터 (실제 환경에 맞게 수정 필요)
@@ -315,6 +321,13 @@ networks:
 
 export default function Home() {
   const [selectedConfig, setSelectedConfig] = useState(null);
+  const [updateSettings, setUpdateSettings] = useState({
+    system: 10000,
+    docker: 15000,
+    network: 60000,
+    security: 60000,
+    autoUpdate: true
+  });
   
   const openModal = (config) => {
     setSelectedConfig(config);
@@ -324,34 +337,95 @@ export default function Home() {
     setSelectedConfig(null);
   };
 
+  const handleUpdateSettingsChange = useCallback((settings) => {
+    setUpdateSettings(settings);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Head>
-        <title>Sveltt's </title>
-        <meta name="description" content="Sveltt Personal WebApp" />
+        <title>Sveltt's Dashboard</title>
+        <meta name="description" content="Sveltt Personal Server Monitoring Dashboard" />
         <link rel="icon" href="/favicon.ico" />
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.8);
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.9);
+          }
+          .custom-scrollbar::-webkit-scrollbar-corner {
+            background: rgba(15, 23, 42, 0.3);
+          }
+        `}</style>
       </Head>
 
       <Navbar />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="text-left mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-green-400 mb-4 font-ubuntu-mono">
-            Juux : main
-          </h1>
-          <p className="text-xl text-gray-300 font-ubuntu-mono"> 
-            Linux - Docker service
-          </p>
+      <main className="container mx-auto px-4 py-6">
+        {/* 헤더 섹션 */}
+        <div className="flex justify-between items-start mb-6">
+          <div className="text-left">
+            <h1 className="text-5xl md:text-4xl font-bold text-green-400 mb-2 font-ubuntu-mono">
+              Juux : Dashboard
+            </h1>
+            <p className="text-lg text-gray-300 font-ubuntu-mono"> 
+              System status Panel
+            </p>
+          </div>
+          
+          {/* 업데이트 설정 */}
+          <div className="hidden md:block">
+            <UpdateSettings onSettingsChange={handleUpdateSettingsChange} />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {services.map((service) => (
-            <ServiceCard 
-              key={service.id}
-              service={service}
-              onConfigClick={() => openModal(service.dockerConfig)}
-            />
-          ))}
+        {/* 컴팩트 서비스 카드 - 상단 수평 스크롤 */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-200 mb-4 font-ubuntu-mono">
+            Quick Access Services
+          </h2>
+          <div 
+            className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#475569 #0f1729'
+            }}
+          >
+            {services.map((service) => (
+              <CompactServiceCard
+                key={service.id}
+                service={service}
+                onConfigClick={() => openModal(service.dockerConfig)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* 메인 대시보드 영역 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* 시스템 상태 패널 */}
+          <SystemStatusPanel updateInterval={updateSettings.system} />
+
+          {/* Docker 상태 패널 */}
+          <DockerStatusPanel updateInterval={updateSettings.docker} />
+
+          {/* 네트워크 상태 패널 */}
+          <NetworkStatusPanel updateInterval={updateSettings.network} />
+        </div>
+
+        {/* 보안 모니터링 섹션 - 전체 너비 */}
+        <div className="mt-6">
+          <SecurityPanel updateInterval={updateSettings.security} />
         </div>
       </main>
 

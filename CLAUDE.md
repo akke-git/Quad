@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Sveltt Personal WebApp** is a Next.js application for managing personal home server services. It provides a dashboard for accessing various Docker services, a blog system with web crawling capabilities, and a golf score management system.
+**Sveltt Personal WebApp** is a Next.js application for managing personal home server services. It provides a dashboard for accessing various Docker services, a blog system, and a golf score management system.
 
 ## Key Commands
 
@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Main Features
 1. **Home Dashboard** (`/pages/index.js`): Service cards with Docker configurations
-2. **Blog System** (`/pages/blog/*`, `/pages/api/blog/*`): Content management with web crawling
+2. **Blog System** (`/pages/blog/*`, `/pages/api/blog/*`): Content management
 3. **Golf Management** (`/pages/golf/*`, `/pages/api/golf/*`): Score tracking and course management
 
 ### Styling
@@ -58,7 +58,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - React Strict Mode enabled
 
 ### API Structure
-- Blog APIs handle CRUD operations, web crawling, image uploads, and search
+- Blog APIs handle CRUD operations, image uploads, and search
 - Golf APIs manage courses, rounds, teams, users, and team matches
 - File uploads stored in `/public/uploads/` directory
 
