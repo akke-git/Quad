@@ -1,26 +1,7 @@
 // pages/api/files/download.js
 import fs from 'fs';
 import path from 'path';
-
-// 경로 보안 검증
-function validatePath(requestedPath) {
-  // 경로 정리: 앞의 '/' 제거 및 '..' 등 정리
-  const cleanPath = (requestedPath || '').replace(/^\/+/, '').replace(/\.\.+/g, '');
-  
-  // public 폴더 기준으로 안전한 경로 생성
-  const fullPath = path.join(process.cwd(), 'public', cleanPath);
-  
-  // Path traversal 공격 방지: public 폴더 하위인지 확인
-  const allowedBasePath = path.join(process.cwd(), 'public');
-  const resolvedPath = path.resolve(fullPath);
-  const resolvedBasePath = path.resolve(allowedBasePath);
-  
-  if (!resolvedPath.startsWith(resolvedBasePath)) {
-    throw new Error('Access denied: Invalid path');
-  }
-  
-  return resolvedPath;
-}
+import { validatePath } from '../../../lib/filePathValidator';
 
 // MIME 타입 결정
 function getMimeType(filePath) {

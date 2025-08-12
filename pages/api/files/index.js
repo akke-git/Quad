@@ -1,70 +1,7 @@
 // pages/api/files/index.js
 import fs from 'fs';
 import path from 'path';
-
-// 허용된 베이스 디렉토리들 (보안을 위해 제한)
-const ALLOWED_BASE_PATHS = [
-  path.join(process.cwd(), 'public'),
-  path.join(process.cwd(), 'public/uploads'),
-  path.join(process.cwd(), 'public/downloads'),
-  path.join(process.cwd(), 'temp'),
-  '/serverhost/ubuntu',  // 도커 컨테이너 내부에서 서버 호스트 ubuntu 폴더
-  '/serverhost/docker'   // 도커 컨테이너 내부에서 서버 호스트 docker 폴더
-];
-
-// 경로 보안 검증
-function validatePath(requestedPath) {
-  // 경로 정리: '..' 등 정리 (path traversal 방지)
-  const cleanPath = (requestedPath || '').replace(/\.\.+/g, '');
-  
-  console.log('validatePath debug:');
-  console.log('  - requestedPath:', requestedPath);
-  console.log('  - cleanPath:', cleanPath);
-  
-  // 서버 호스트 폴더 경로 처리
-  if (cleanPath.startsWith('/ubuntu') || cleanPath.startsWith('/docker')) {
-    // 사용자가 /ubuntu, /docker로 요청하면 실제 컨테이너 내부 경로로 변환
-    let actualPath;
-    if (cleanPath.startsWith('/ubuntu')) {
-      actualPath = cleanPath.replace('/ubuntu', '/serverhost/ubuntu');
-    } else if (cleanPath.startsWith('/docker')) {
-      actualPath = cleanPath.replace('/docker', '/serverhost/docker');
-    }
-    
-    const resolvedPath = path.resolve(actualPath);
-    console.log('  - resolvedPath (server host):', resolvedPath);
-    
-    // 허용된 서버 호스트 경로인지 확인
-    const isUbuntuPath = resolvedPath === '/serverhost/ubuntu' || resolvedPath.startsWith('/serverhost/ubuntu/');
-    const isDockerPath = resolvedPath === '/serverhost/docker' || resolvedPath.startsWith('/serverhost/docker/');
-    
-    if (!isUbuntuPath && !isDockerPath) {
-      throw new Error('Access denied: Invalid server host path');
-    }
-    
-    return resolvedPath;
-  }
-  
-  // 기존 public 폴더 처리
-  const normalizedPath = cleanPath.replace(/^\/+/, '');
-  const fullPath = path.join(process.cwd(), 'public', normalizedPath);
-  
-  // Path traversal 공격 방지: public 폴더 하위인지 확인
-  const allowedBasePath = path.join(process.cwd(), 'public');
-  const resolvedPath = path.resolve(fullPath);
-  const resolvedBasePath = path.resolve(allowedBasePath);
-  
-  console.log('  - fullPath (public):', fullPath);
-  console.log('  - resolvedPath (public):', resolvedPath);
-  console.log('  - resolvedBasePath:', resolvedBasePath);
-  console.log('  - startsWith check:', resolvedPath.startsWith(resolvedBasePath));
-  
-  if (!resolvedPath.startsWith(resolvedBasePath)) {
-    throw new Error('Access denied: Invalid path');
-  }
-  
-  return resolvedPath;
-}
+import { validatePath, isServerHostPath, formatUserPath } from '../../../lib/filePathValidator';
 
 // 권한을 문자열로 변환 (rwxrwxrwx 형식)
 function formatPermissions(mode) {
@@ -91,17 +28,7 @@ function formatFileInfo(filePath, fileName, isServerHost = false) {
   const stats = fs.statSync(filePath);
   const isDirectory = stats.isDirectory();
   
-  let formattedPath;
-  
-  if (isServerHost) {
-    // 서버 호스트 경로의 경우 절대 경로 사용
-    formattedPath = filePath;
-  } else {
-    // 기존 public 폴더 처리
-    const publicPath = path.join(process.cwd(), 'public');
-    const relativePath = path.relative(publicPath, filePath);
-    formattedPath = path.posix.join('/', relativePath);
-  }
+  const formattedPath = formatUserPath(filePath, isServerHost);
   
   console.log(`formatFileInfo: ${fileName}`);
   console.log(`  - filePath: ${filePath}`);
@@ -133,7 +60,7 @@ export default async function handler(req, res) {
     const fullPath = validatePath(requestedPath);
     
     // 서버 호스트 경로인지 확인
-    const isServerHost = fullPath.startsWith('/serverhost/ubuntu') || fullPath.startsWith('/serverhost/docker');
+    const isServerHost = isServerHostPath(fullPath);
     
     // 디렉토리가 존재하는지 확인
     if (!fs.existsSync(fullPath)) {
