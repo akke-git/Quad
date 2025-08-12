@@ -5,7 +5,6 @@ import Navbar from '../components/Navbar';
 import ServiceCard from '../components/ServiceCard';
 import CompactServiceCard from '../components/CompactServiceCard';
 import SystemStatusPanel from '../components/SystemStatusPanel';
-import DockerStatusPanel from '../components/DockerStatusPanel';
 import NetworkStatusPanel from '../components/NetworkStatusPanel';
 import SecurityPanel from '../components/SecurityPanel';
 import UpdateSettings from '../components/UpdateSettings';
@@ -323,7 +322,6 @@ export default function Home() {
   const [selectedConfig, setSelectedConfig] = useState(null);
   const [updateSettings, setUpdateSettings] = useState({
     system: 10000,
-    docker: 15000,
     network: 60000,
     security: 60000,
     autoUpdate: true
@@ -411,21 +409,21 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 메인 대시보드 영역 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {/* 시스템 상태 패널 */}
-          <SystemStatusPanel updateInterval={updateSettings.system} />
+        {/* 메인 대시보드 영역 - 좌우 2등분 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 좌측 영역 */}
+          <div className="space-y-6">
+            {/* 좌측 위: 시스템 상태 패널 */}
+            <SystemStatusPanel updateInterval={updateSettings.system} />
+            
+            {/* 좌측 아래: 네트워크 상태 패널 */}
+            <NetworkStatusPanel updateInterval={updateSettings.network} />
+          </div>
 
-          {/* Docker 상태 패널 */}
-          <DockerStatusPanel updateInterval={updateSettings.docker} />
-
-          {/* 네트워크 상태 패널 */}
-          <NetworkStatusPanel updateInterval={updateSettings.network} />
-        </div>
-
-        {/* 보안 모니터링 섹션 - 전체 너비 */}
-        <div className="mt-6">
-          <SecurityPanel updateInterval={updateSettings.security} />
+          {/* 우측 영역: 보안 모니터링 */}
+          <div>
+            <SecurityPanel updateInterval={updateSettings.security} />
+          </div>
         </div>
       </main>
 

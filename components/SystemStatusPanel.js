@@ -48,11 +48,58 @@ export default function SystemStatusPanel() {
     return 'text-green-400';
   };
 
-  // 진행률 바 색상 결정 (그라디언트 적용)
-  const getProgressColor = (usage, thresholds = { high: 80, medium: 60 }) => {
-    if (usage >= thresholds.high) return 'bg-gradient-to-r from-red-500 to-red-400';
-    if (usage >= thresholds.medium) return 'bg-gradient-to-r from-yellow-500 to-yellow-400';
-    return 'bg-gradient-to-r from-green-500 to-green-400';
+  // 원형 차트용 색상 결정
+  const getCircleColor = (usage, thresholds = { high: 80, medium: 60 }) => {
+    if (usage >= thresholds.high) return '#EF4444'; // red-500
+    if (usage >= thresholds.medium) return '#EAB308'; // yellow-500
+    return '#22C55E'; // green-500
+  };
+
+  // 원형 차트 SVG 생성
+  const CircularProgress = ({ percentage, size = 120, strokeWidth = 8, color }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="relative inline-flex items-center justify-center">
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* 배경 원 */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#374151"
+            strokeWidth={strokeWidth}
+            fill="none"
+            opacity="0.3"
+          />
+          {/* 진행률 원 */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-700 ease-out"
+            style={{
+              filter: `drop-shadow(0 0 6px ${color}40)`
+            }}
+          />
+        </svg>
+        {/* 중앙 텍스트 */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-bold text-white font-ubuntu-mono">
+            {percentage.toFixed(0)}%
+          </span>
+        </div>
+      </div>
+    );
   };
 
   // 로딩 상태
@@ -117,112 +164,78 @@ export default function SystemStatusPanel() {
         )}
       </div>
 
-      <div className="space-y-4">
+      {/* 원형 차트 그리드 */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {/* CPU 사용률 */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 font-ubuntu-mono">CPU Usage</span>
-            <span className={`font-ubuntu-mono font-semibold ${getStatusColor(systemData?.cpu?.usage || 0)}`}>
-              {systemData?.cpu?.usage?.toFixed(1) || 0}%
-            </span>
+        <div className="text-center">
+          <CircularProgress 
+            percentage={systemData?.cpu?.usage || 0}
+            color={getCircleColor(systemData?.cpu?.usage || 0)}
+            size={100}
+            strokeWidth={6}
+          />
+          <div className="mt-3">
+            <h4 className="text-sm font-semibold text-gray-300 font-ubuntu-mono">CPU</h4>
+            {systemData?.cpu?.cores && (
+              <p className="text-xs text-gray-400 font-ubuntu-mono">{systemData.cpu.cores} cores</p>
+            )}
           </div>
-          <div className="relative">
-            <div className="w-full bg-gradient-to-r from-gray-800 to-gray-700 rounded-full h-4 shadow-inner border border-gray-600/50">
-              <div 
-                className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${getProgressColor(systemData?.cpu?.usage || 0)}`}
-                style={{ width: `${Math.min(systemData?.cpu?.usage || 0, 100)}%` }}
-              >
-                {/* 그라디언트 오버레이 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full"></div>
-                {/* 애니메이션 글로우 효과 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-full animate-pulse"></div>
-              </div>
-            </div>
-            {/* 진행률 텍스트 */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-semibold text-white/90 drop-shadow-lg font-ubuntu-mono">
-                {systemData?.cpu?.usage?.toFixed(0) || 0}%
-              </span>
-            </div>
-          </div>
-          {systemData?.cpu?.model && (
-            <div className="text-xs text-gray-400 font-ubuntu-mono truncate">
-              {systemData.cpu.cores} cores - {systemData.cpu.model}
-            </div>
-          )}
         </div>
 
         {/* 메모리 사용량 */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 font-ubuntu-mono">Memory</span>
-            <span className={`font-ubuntu-mono font-semibold ${getStatusColor(systemData?.memory?.usage || 0)}`}>
-              {systemData?.memory?.usage?.toFixed(1) || 0}%
-            </span>
-          </div>
-          <div className="relative">
-            <div className="w-full bg-gradient-to-r from-gray-800 to-gray-700 rounded-full h-4 shadow-inner border border-gray-600/50">
-              <div 
-                className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${getProgressColor(systemData?.memory?.usage || 0)}`}
-                style={{ width: `${Math.min(systemData?.memory?.usage || 0, 100)}%` }}
-              >
-                {/* 그라디언트 오버레이 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full"></div>
-                {/* 애니메이션 글로우 효과 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-full animate-pulse"></div>
-              </div>
-            </div>
-            {/* 진행률 텍스트 */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-semibold text-white/90 drop-shadow-lg font-ubuntu-mono">
-                {systemData?.memory?.usage?.toFixed(0) || 0}%
-              </span>
-            </div>
-          </div>
-          <div className="text-xs text-gray-400 font-ubuntu-mono">
-            {systemData?.memory?.used || 0} / {systemData?.memory?.total || 0} MB
+        <div className="text-center">
+          <CircularProgress 
+            percentage={systemData?.memory?.usage || 0}
+            color={getCircleColor(systemData?.memory?.usage || 0)}
+            size={100}
+            strokeWidth={6}
+          />
+          <div className="mt-3">
+            <h4 className="text-sm font-semibold text-gray-300 font-ubuntu-mono">Memory</h4>
+            <p className="text-xs text-gray-400 font-ubuntu-mono">
+              {systemData?.memory?.used || 0} / {systemData?.memory?.total || 0} MB
+            </p>
           </div>
         </div>
 
         {/* 디스크 사용량 */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 font-ubuntu-mono">Disk Usage</span>
-            <span className={`font-ubuntu-mono font-semibold ${getStatusColor(systemData?.disk?.usage || 0)}`}>
-              {systemData?.disk?.usage?.toFixed(1) || 0}%
-            </span>
-          </div>
-          <div className="relative">
-            <div className="w-full bg-gradient-to-r from-gray-800 to-gray-700 rounded-full h-4 shadow-inner border border-gray-600/50">
-              <div 
-                className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${getProgressColor(systemData?.disk?.usage || 0)}`}
-                style={{ width: `${Math.min(systemData?.disk?.usage || 0, 100)}%` }}
-              >
-                {/* 그라디언트 오버레이 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full"></div>
-                {/* 애니메이션 글로우 효과 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent rounded-full animate-pulse"></div>
-              </div>
-            </div>
-            {/* 진행률 텍스트 */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-semibold text-white/90 drop-shadow-lg font-ubuntu-mono">
-                {systemData?.disk?.usage?.toFixed(0) || 0}%
-              </span>
-            </div>
-          </div>
-          <div className="text-xs text-gray-400 font-ubuntu-mono">
-            {systemData?.disk?.used || '0G'} / {systemData?.disk?.total || '0G'} used
+        <div className="text-center">
+          <CircularProgress 
+            percentage={systemData?.disk?.usage || 0}
+            color={getCircleColor(systemData?.disk?.usage || 0)}
+            size={100}
+            strokeWidth={6}
+          />
+          <div className="mt-3">
+            <h4 className="text-sm font-semibold text-gray-300 font-ubuntu-mono">Disk</h4>
+            <p className="text-xs text-gray-400 font-ubuntu-mono">
+              {systemData?.disk?.used || '0G'} / {systemData?.disk?.total || '0G'}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* 시스템 가동시간 */}
-        <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
-          <span className="text-gray-300 font-ubuntu-mono">Uptime</span>
+      {/* 시스템 정보 */}
+      <div className="border-t border-slate-700/50 pt-4 space-y-3">
+        {/* 가동시간 */}
+        <div className="flex justify-between items-center">
+          <span className="text-gray-300 font-ubuntu-mono flex items-center">
+            <svg className="w-4 h-4 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Uptime
+          </span>
           <span className="text-blue-400 font-ubuntu-mono font-semibold">
             {systemData?.uptime?.formatted || 'Unknown'}
           </span>
         </div>
+
+        {/* CPU 모델 정보 */}
+        {systemData?.cpu?.model && (
+          <div className="text-xs text-gray-400 font-ubuntu-mono bg-slate-900/50 p-2 rounded">
+            <span className="text-gray-300">CPU:</span> {systemData.cpu.model}
+          </div>
+        )}
       </div>
     </div>
   );

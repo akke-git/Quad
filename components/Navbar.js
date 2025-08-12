@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import FilePasswordModal from './FilePasswordModal';
 
 export default function Navbar() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isGolfSubmenuOpen, setIsGolfSubmenuOpen] = useState(false);
+  const [isFilePasswordModalOpen, setIsFilePasswordModalOpen] = useState(false);
   const golfSubmenuRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
@@ -35,6 +37,12 @@ export default function Navbar() {
       e.stopPropagation();
     }
     setIsGolfSubmenuOpen(prev => !prev);
+  };
+
+  // Files 링크 클릭 처리
+  const handleFilesClick = (e) => {
+    e.preventDefault();
+    setIsFilePasswordModalOpen(true);
   };
   
   // 모바일에서 메뉴 닫기
@@ -100,6 +108,12 @@ export default function Navbar() {
               <Link href="/music" className="text-gray-300 hover:text-green-400 px-3 py-2 rounded-md font-medium font-ubuntu-mono">
                 Music
               </Link>
+              <button 
+                onClick={handleFilesClick}
+                className="text-gray-300 hover:text-green-400 px-3 py-2 rounded-md font-medium font-ubuntu-mono"
+              >
+                Files
+              </button>
               <div className="relative" ref={golfSubmenuRef}>
                 <button 
                   onClick={toggleGolfSubmenu}
@@ -174,6 +188,12 @@ export default function Navbar() {
               Music
             </Link>
             
+            <button 
+              onClick={handleFilesClick}
+              className="text-gray-300 hover:text-green-400 block px-3 py-2 rounded-md font-medium font-ubuntu-mono w-full text-left">
+              Files
+            </button>
+            
             {/* 모바일 골프 메뉴 */}
             <div>
               <button 
@@ -218,6 +238,12 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Files 비밀번호 인증 모달 */}
+      <FilePasswordModal 
+        isOpen={isFilePasswordModalOpen}
+        onClose={() => setIsFilePasswordModalOpen(false)}
+      />
     </nav>
   );
 }

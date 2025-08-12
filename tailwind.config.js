@@ -10,6 +10,8 @@ module.exports = {
           'ubuntu-mono': ['Ubuntu Mono', 'monospace'],
           'nanum-gothic': ['Nanum Gothic', 'sans-serif'],
           'apple-gothic': ['Apple SD Gothic Neo', 'sans-serif'],
+          'sans': ['Apple SD Gothic Neo', 'AppleSDGothicNeo', 'Noto Sans KR', 'sans-serif'],
+          'mono': ['Ubuntu Mono', 'monospace'],
         },
         colors: {
           green: {

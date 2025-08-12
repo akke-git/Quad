@@ -10,7 +10,6 @@ export default function UpdateSettings({ onSettingsChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState({
     system: 10000,    // 10초
-    docker: 15000,    // 15초
     network: 60000,   // 60초
     security: 60000,  // 60초
     autoUpdate: true  // 자동 업데이트 활성화/비활성화
@@ -32,7 +31,6 @@ export default function UpdateSettings({ onSettingsChange }) {
       if (isInitialLoad.current) {
         const defaultSettings = {
           system: 10000,
-          docker: 15000,
           network: 60000,
           security: 60000,
           autoUpdate: true
@@ -54,9 +52,9 @@ export default function UpdateSettings({ onSettingsChange }) {
   // 미리 정의된 업데이트 주기 옵션
   const updateOptions = [
     { label: '5초 (매우 빠름)', value: 5000, recommended: ['system'] },
-    { label: '10초 (빠름)', value: 10000, recommended: ['system', 'docker'] },
-    { label: '15초 (보통)', value: 15000, recommended: ['docker'] },
-    { label: '30초 (느림)', value: 30000, recommended: ['system', 'docker'] },
+    { label: '10초 (빠름)', value: 10000, recommended: ['system'] },
+    { label: '15초 (보통)', value: 15000, recommended: ['system'] },
+    { label: '30초 (느림)', value: 30000, recommended: ['system'] },
     { label: '60초 (매우 느림)', value: 60000, recommended: ['network', 'security'] },
     { label: '5분 (수동)', value: 300000, recommended: [] }
   ];
@@ -127,7 +125,6 @@ export default function UpdateSettings({ onSettingsChange }) {
           <div className="space-y-4">
             {[
               { key: 'system', label: '시스템 상태', icon: '📊' },
-              { key: 'docker', label: 'Docker 상태', icon: '🐳' },
               { key: 'network', label: '네트워크 상태', icon: '🌐' },
               { key: 'security', label: '보안 모니터링', icon: '🔒' }
             ].map((panel) => (
@@ -164,7 +161,7 @@ export default function UpdateSettings({ onSettingsChange }) {
             <div className="flex space-x-2">
               <button
                 onClick={() => {
-                  const fastSettings = { ...settings, system: 5000, docker: 10000, network: 30000, security: 60000 };
+                  const fastSettings = { ...settings, system: 5000, network: 30000, security: 60000 };
                   setSettings(fastSettings);
                   localStorage.setItem('dashboard-update-settings', JSON.stringify(fastSettings));
                   onSettingsChange?.(fastSettings);
@@ -175,7 +172,7 @@ export default function UpdateSettings({ onSettingsChange }) {
               </button>
               <button
                 onClick={() => {
-                  const balancedSettings = { ...settings, system: 15000, docker: 30000, network: 60000, security: 60000 };
+                  const balancedSettings = { ...settings, system: 15000, network: 60000, security: 60000 };
                   setSettings(balancedSettings);
                   localStorage.setItem('dashboard-update-settings', JSON.stringify(balancedSettings));
                   onSettingsChange?.(balancedSettings);
@@ -186,7 +183,7 @@ export default function UpdateSettings({ onSettingsChange }) {
               </button>
               <button
                 onClick={() => {
-                  const powerSaveSettings = { ...settings, system: 60000, docker: 60000, network: 300000, security: 300000 };
+                  const powerSaveSettings = { ...settings, system: 60000, network: 300000, security: 300000 };
                   setSettings(powerSaveSettings);
                   localStorage.setItem('dashboard-update-settings', JSON.stringify(powerSaveSettings));
                   onSettingsChange?.(powerSaveSettings);
@@ -203,7 +200,7 @@ export default function UpdateSettings({ onSettingsChange }) {
             <div className="text-xs text-gray-400 font-apple-gothic mb-1">현재 상태:</div>
             <div className="text-xs text-gray-300 font-apple-gothic">
               자동 업데이트: {settings.autoUpdate ? '활성화' : '비활성화'} • 
-              평균 주기: {formatInterval((settings.system + settings.docker + settings.network + settings.security) / 4)}
+              평균 주기: {formatInterval((settings.system + settings.network + settings.security) / 3)}
             </div>
           </div>
         </div>

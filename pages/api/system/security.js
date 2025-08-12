@@ -61,8 +61,7 @@ async function handleSecurityMonitoring(req, res) {
           alertCount: 0
         },
         firewall: {
-          system: { type: 'development', status: 'active', rules: 8 },
-          docker: { rules: 3 }
+          system: { type: 'development', status: 'active', rules: 8 }
         },
         auth: {
           ssh: Math.floor(Math.random() * 3),
@@ -177,15 +176,15 @@ async function getRecentAccessStats() {
     }
   }
 
-  // Docker 컨테이너 로그 확인
+  // 시스템 웹서버 로그 확인
   try {
-    const { stdout: dockerLogs } = await execAsync("docker logs nginx 2>/dev/null | tail -100 || echo ''");
-    if (dockerLogs.trim()) {
-      const stats = analyzeAccessLog(dockerLogs, new Date(Date.now() - 60 * 60 * 1000));
-      return { ...stats, source: 'docker-nginx' };
+    const { stdout: systemLogs } = await execAsync("journalctl -u nginx --since '1 hour ago' --no-pager -q 2>/dev/null | tail -100 || echo ''");
+    if (systemLogs.trim()) {
+      const stats = analyzeAccessLog(systemLogs, new Date(Date.now() - 60 * 60 * 1000));
+      return { ...stats, source: 'system-nginx' };
     }
   } catch (error) {
-    // Docker 로그도 없음
+    // 시스템 로그도 없음
   }
 
   // 개발 환경용 기본 통계 반환
@@ -245,32 +244,23 @@ function analyzeAccessLog(logContent, sinceTime) {
 }
 
 /**
- * Nginx 컨테이너 통계
+ * Nginx 서버 통계 (일반 웹서버)
  */
 async function getNginxContainerStats() {
   try {
-    // NPM (Nginx Proxy Manager) 컨테이너 확인
-    const { stdout: npmContainer } = await execAsync("docker ps --filter name=npm --format 'json' || echo ''");
+    // 일반 웹서버 상태 확인
+    const { stdout: nginxStatus } = await execAsync("systemctl is-active nginx 2>/dev/null || echo 'inactive'");
     
-    if (npmContainer.trim()) {
-      const container = JSON.parse(npmContainer.trim());
-      
-      // 컨테이너 리소스 사용량
-      const { stdout: stats } = await execAsync(`docker stats ${container.Names} --no-stream --format "table {{.CPUPerc}}\t{{.MemUsage}}" | tail -1`);
-      const [cpu, memory] = stats.trim().split('\t');
-
+    if (nginxStatus.trim() === 'active') {
       return {
-        containerName: container.Names,
         status: 'running',
-        cpu: cpu || '0%',
-        memory: memory || '0B / 0B',
-        ports: container.Ports
+        type: 'system_service'
       };
     }
 
-    return { status: 'not_found' };
+    return { status: 'not_found', type: 'system_service' };
   } catch (error) {
-    return { status: 'error', error: error.message };
+    return { status: 'development', type: 'development_mode' };
   }
 }
 
@@ -402,22 +392,8 @@ async function getFirewallStatus() {
       }
     }
 
-    // Docker의 방화벽 규칙도 확인
-    let dockerFirewall = null;
-    try {
-      const { stdout: dockerRules } = await execAsync("iptables -L DOCKER 2>/dev/null | wc -l || echo 0");
-      const dockerRuleCount = parseInt(dockerRules.trim()) || 0;
-      if (dockerRuleCount > 0) {
-        dockerFirewall = { rules: dockerRuleCount - 2 }; // 헤더 제외
-      }
-    } catch (error) {
-      // Docker 규칙 없음 - 개발 환경용 기본값
-      dockerFirewall = { rules: Math.floor(Math.random() * 5) + 2 };
-    }
-
     return {
       system: firewallStatus,
-      docker: dockerFirewall,
       lastChecked: new Date().toISOString()
     };
   } catch (error) {
@@ -425,7 +401,6 @@ async function getFirewallStatus() {
     // 개발 환경용 기본 방화벽 상태
     return {
       system: { type: 'development', status: 'active', rules: 8 },
-      docker: { rules: 3 },
       lastChecked: new Date().toISOString(),
       note: 'Development environment'
     };

@@ -96,7 +96,7 @@ export default function NetworkStatusPanel() {
           Network Status
         </h3>
         <div className="space-y-4">
-          {['juux.net', 'Nginx Proxy', 'Cloudflare', 'DNS'].map((item, index) => (
+          {['juux.net Services', 'Network Stats'].map((item, index) => (
             <div key={index} className="flex justify-between items-center">
               <span className="text-gray-300 font-ubuntu-mono">{item}</span>
               <div className="animate-pulse bg-gray-600 h-4 w-20 rounded"></div>
@@ -226,98 +226,48 @@ export default function NetworkStatusPanel() {
           </div>
         )}
 
-        <div className="border-t border-slate-700/50 pt-4 space-y-3">
-          {/* Nginx 프록시 상태 */}
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 font-ubuntu-mono">Nginx Proxy</span>
-            <div className="text-right">
-              <div className={`text-sm font-ubuntu-mono ${getStatusInfo(networkData?.nginx?.status).color}`}>
-                {getStatusInfo(networkData?.nginx?.status).text}
+        {/* 네트워크 통계 */}
+        {networkData?.network && (
+          <div className="border-t border-slate-700/50 pt-4">
+            <div className="bg-slate-700/20 rounded-lg p-4">
+              <div className="text-sm font-semibold text-gray-200 font-ubuntu-mono mb-3 flex items-center">
+                <svg className="w-4 h-4 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Network Stats
               </div>
-              {networkData?.nginx?.processCount > 0 && (
-                <div className="text-xs text-gray-400 font-ubuntu-mono">
-                  {networkData.nginx.processCount} processes
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* NPM 컨테이너 정보 */}
-          {networkData?.nginx?.npmContainer && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 font-ubuntu-mono text-sm">NPM Container</span>
-              <div className="text-right">
-                <div className="text-green-400 text-sm font-ubuntu-mono">Running</div>
-                <div className="text-xs text-gray-400 font-ubuntu-mono">
-                  {networkData.nginx.npmContainer.name}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* DNS 상태 */}
-          {networkData?.network?.dns && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-300 font-ubuntu-mono">DNS Resolution</span>
-              <div className="text-right">
-                <div className={`text-sm font-ubuntu-mono ${getStatusInfo(networkData.network.dns.status).color}`}>
-                  {getStatusInfo(networkData.network.dns.status).text}
-                </div>
-                {networkData.network.dns.resolvedIP && (
-                  <div className="text-xs text-gray-400 font-ubuntu-mono">
-                    {networkData.network.dns.dnsServer}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Cloudflare 상태 */}
-          {networkData?.cloudflare && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-300 font-ubuntu-mono">Cloudflare</span>
-              <div className="text-right">
-                <div className={`text-sm font-ubuntu-mono ${getStatusInfo(networkData.cloudflare.status).color}`}>
-                  {getStatusInfo(networkData.cloudflare.status).text}
-                </div>
-                {networkData.cloudflare.responseTime && (
-                  <div className={`text-xs font-ubuntu-mono ${getResponseTimeColor(networkData.cloudflare.responseTime)}`}>
-                    {networkData.cloudflare.responseTime}ms
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 네트워크 통계 */}
-          {networkData?.network && (
-            <div className="bg-slate-700/20 rounded-lg p-3 mt-4">
-              <div className="text-sm font-semibold text-gray-200 font-ubuntu-mono mb-2">Network Stats</div>
-              <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <div className="text-gray-400 font-ubuntu-mono">Active Connections</div>
-                  <div className="text-blue-400 font-ubuntu-mono font-semibold">
+                  <div className="text-gray-400 font-ubuntu-mono text-xs">Active Connections</div>
+                  <div className="text-blue-400 font-ubuntu-mono font-bold text-lg">
                     {networkData.network.activeConnections || 0}
                   </div>
                 </div>
                 <div>
-                  <div className="text-gray-400 font-ubuntu-mono">Interfaces</div>
-                  <div className="text-blue-400 font-ubuntu-mono font-semibold">
+                  <div className="text-gray-400 font-ubuntu-mono text-xs">Network Interfaces</div>
+                  <div className="text-blue-400 font-ubuntu-mono font-bold text-lg">
                     {networkData.network.interfaces?.length || 0}
                   </div>
                 </div>
               </div>
               {networkData.network.traffic && (
-                <div className="mt-2 text-xs">
-                  <div className="text-gray-400 font-ubuntu-mono">Traffic (Session)</div>
-                  <div className="text-gray-300 font-ubuntu-mono">
-                    ↓ {networkData.network.traffic.received} • ↑ {networkData.network.traffic.transmitted}
+                <div className="mt-3 pt-3 border-t border-slate-600/50">
+                  <div className="text-gray-400 font-ubuntu-mono text-xs mb-2">Session Traffic</div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center">
+                      <span className="text-green-400 mr-2">↓</span>
+                      <span className="text-gray-300 font-ubuntu-mono">{networkData.network.traffic.received}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-red-400 mr-2">↑</span>
+                      <span className="text-gray-300 font-ubuntu-mono">{networkData.network.traffic.transmitted}</span>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
